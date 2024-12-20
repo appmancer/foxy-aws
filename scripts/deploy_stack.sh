@@ -22,23 +22,12 @@ fi
 # Extract parameters from config file
 PARAMETERS=$(jq -r '.Parameters[] | "\(.ParameterKey)=\(.ParameterValue)"' "$CONFIG_FILE")
 
-# Add RoleExportName parameter if it exists in the config
-ROLE_EXPORT_NAME=$(jq -r '.RoleExportName // empty' "$CONFIG_FILE")
-if [ -n "$ROLE_EXPORT_NAME" ]; then
-  PARAMETERS="$PARAMETERS RoleExportName=$ROLE_EXPORT_NAME"
-fi
-
 # Deploy the stack
-if [ -z "$PARAMETERS" ]; then
-  echo "Deploying stack '$STACK_NAME' with template '$TEMPLATE_FILE' (no parameters)."
-else
-  echo "Deploying stack '$STACK_NAME' with template '$TEMPLATE_FILE' and parameters: $PARAMETERS"
-fi
-
+echo "Deploying stack '$STACK_NAME' with template '$TEMPLATE_FILE' and parameters: $PARAMETERS"
 aws cloudformation deploy \
   --stack-name "$STACK_NAME" \
   --template-file "$TEMPLATE_FILE" \
-  ${PARAMETERS:+--parameter-overrides $PARAMETERS} \
+  --parameter-overrides $PARAMETERS \
   --capabilities CAPABILITY_NAMED_IAM
 
 if [ $? -eq 0 ]; then
