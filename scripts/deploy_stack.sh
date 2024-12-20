@@ -1,17 +1,17 @@
 #!/bin/bash
 
-# Usage: ./deploy_stack.sh <STACK_KEY> <TEMPLATE_FILE> <CONFIG_FILE>
+# Usage: ./deploy_stack.sh <STACK_KEY> <TEMPLATE_FILE> <CONFIG_FILE> [ROLE_ARN]
 
 STACK_KEY=$1
 TEMPLATE_FILE=$2
 CONFIG_FILE=$3
+ROLE_ARN=$4
 
 if [ -z "$STACK_KEY" ] || [ -z "$TEMPLATE_FILE" ] || [ -z "$CONFIG_FILE" ]; then
-  echo "Usage: ./deploy_stack.sh <STACK_KEY> <TEMPLATE_FILE> <CONFIG_FILE>"
+  echo "Usage: ./deploy_stack.sh <STACK_KEY> <TEMPLATE_FILE> <CONFIG_FILE> [ROLE_ARN]"
   exit 1
 fi
 
-# Extract stack name from config file
 STACK_NAME=$(jq -r ".Stacks[\"$STACK_KEY\"]" "$CONFIG_FILE")
 
 if [ -z "$STACK_NAME" ] || [ "$STACK_NAME" == "null" ]; then
@@ -19,10 +19,13 @@ if [ -z "$STACK_NAME" ] || [ "$STACK_NAME" == "null" ]; then
   exit 1
 fi
 
-# Extract parameters from config file
 PARAMETERS=$(jq -r '.Parameters[] | "\(.ParameterKey)=\(.ParameterValue)"' "$CONFIG_FILE")
 
-# Deploy the stack
+# Append the Role ARN if provided
+if [ -n "$ROLE_ARN" ]; then
+  PARAMETERS="$PARAMETERS RoleArn=$ROLE_ARN"
+fi
+
 echo "Deploying stack '$STACK_NAME' with template '$TEMPLATE_FILE' and parameters: $PARAMETERS"
 aws cloudformation deploy \
   --stack-name "$STACK_NAME" \
