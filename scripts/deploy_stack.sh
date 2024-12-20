@@ -22,10 +22,12 @@ fi
 # Extract parameters from config file
 PARAMETERS=$(jq -r '.Parameters[] | "\(.ParameterKey)=\(.ParameterValue)"' "$CONFIG_FILE")
 
-# Add RoleExportName if it exists in the config file
-ROLE_EXPORT_NAME=$(jq -r '.RoleExportName // empty' "$CONFIG_FILE")
-if [ -n "$ROLE_EXPORT_NAME" ]; then
-  PARAMETERS="$PARAMETERS ExportName=$ROLE_EXPORT_NAME"
+# Add RoleExportName if deploying ServiceAccountStack
+if [ "$STACK_KEY" == "ServiceAccountStack" ]; then
+  ROLE_EXPORT_NAME=$(jq -r ".RoleExportName" "$CONFIG_FILE")
+  if [ -n "$ROLE_EXPORT_NAME" ] && [ "$ROLE_EXPORT_NAME" != "null" ]; then
+    PARAMETERS="$PARAMETERS ExportName=$ROLE_EXPORT_NAME"
+  fi
 fi
 
 # Deploy the stack
