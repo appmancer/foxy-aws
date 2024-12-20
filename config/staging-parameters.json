@@ -15,5 +15,6 @@
       "ParameterKey": "CognitoUserPoolName",
       "ParameterValue": "FoxyStagingUserPool"
     }
-  ]
+  ],
+  "RoleExportName": "staging-CognitoLambdaExecutionRoleName"
 }

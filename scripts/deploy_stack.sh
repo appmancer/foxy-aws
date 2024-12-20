@@ -22,6 +22,12 @@ fi
 # Extract parameters from config file
 PARAMETERS=$(jq -r '.Parameters[] | "\(.ParameterKey)=\(.ParameterValue)"' "$CONFIG_FILE")
 
+# Add RoleExportName if it exists in the config file
+ROLE_EXPORT_NAME=$(jq -r '.RoleExportName // empty' "$CONFIG_FILE")
+if [ -n "$ROLE_EXPORT_NAME" ]; then
+  PARAMETERS="$PARAMETERS ExportName=$ROLE_EXPORT_NAME"
+fi
+
 # Deploy the stack
 echo "Deploying stack '$STACK_NAME' with template '$TEMPLATE_FILE' and parameters: $PARAMETERS"
 aws cloudformation deploy \
@@ -36,3 +42,4 @@ else
   echo "Failed to deploy stack '$STACK_NAME'."
   exit 1
 fi
+
