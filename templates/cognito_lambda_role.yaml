@@ -44,7 +44,6 @@ Resources:
                   - "logs:CreateLogStream"
                   - "logs:PutLogEvents"
                 Resource: "arn:aws:logs:*:*:*"
-
 Outputs:
   RoleArn:
     Description: The ARN of the Cognito Lambda Execution Role
@@ -52,5 +51,5 @@ Outputs:
   CognitoLambdaExecutionRoleName:
     Value: !Ref CognitoLambdaExecutionRole
     Export:
-      Name: !Ref ExportName
+      Name: !Sub "${RoleExportName}"
 
