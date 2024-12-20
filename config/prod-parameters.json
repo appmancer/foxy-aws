@@ -1,10 +1,19 @@
-[
-  {
-    "ParameterKey": "EnvironmentName",
-    "ParameterValue": "prod"
+{
+  "Environment": "Production",
+  "Region": "eu-north-1",
+  "Stacks": {
+    "RoleStack": "foxy-prod-role",
+    "UserPoolStack": "foxy-prod",
+    "ServiceAccountStack": null
   },
-  {
-    "ParameterKey": "CognitoUserPoolName",
-    "ParameterValue": "FoxyProdUserPool"
-  }
-]
+  "Parameters": [
+    {
+      "ParameterKey": "EnvironmentName",
+      "ParameterValue": "prod"
+    },
+    {
+      "ParameterKey": "CognitoUserPoolName",
+      "ParameterValue": "FoxyProdUserPool"
+    }
+  ]
+}

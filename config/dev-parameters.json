@@ -1,10 +1,20 @@
-[
-  {
-    "ParameterKey": "EnvironmentName",
-    "ParameterValue": "dev"
+{
+  "Environment": "Development",
+  "Region": "eu-north-1",
+  "Stacks": {
+    "RoleStack": "foxy-role",
+    "UserPoolStack": "foxy-dev",
+    "ServiceAccountStack": "foxy-service-accounts"
   },
-  {
-    "ParameterKey": "CognitoUserPoolName",
-    "ParameterValue": "FoxyDevUserPool"
-  }
-]
+  "Parameters": [
+    {
+      "ParameterKey": "EnvironmentName",
+      "ParameterValue": "dev"
+    },
+    {
+      "ParameterKey": "CognitoUserPoolName",
+      "ParameterValue": "FoxyDevUserPool"
+    }
+  ]
+}
+

@@ -1,10 +1,19 @@
-[
-  {
-    "ParameterKey": "EnvironmentName",
-    "ParameterValue": "staging"
+{
+  "Environment": "Staging",
+  "Region": "eu-north-1",
+  "Stacks": {
+    "RoleStack": "foxy-staging-role",
+    "UserPoolStack": "foxy-staging",
+    "ServiceAccountStack": null
   },
-  {
-    "ParameterKey": "CognitoUserPoolName",
-    "ParameterValue": "FoxyStagingUserPool"
-  }
-]
+  "Parameters": [
+    {
+      "ParameterKey": "EnvironmentName",
+      "ParameterValue": "staging"
+    },
+    {
+      "ParameterKey": "CognitoUserPoolName",
+      "ParameterValue": "FoxyStagingUserPool"
+    }
+  ]
+}
