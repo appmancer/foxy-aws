@@ -19,24 +19,17 @@ if [ -z "$STACK_NAME" ] || [ "$STACK_NAME" == "null" ]; then
   exit 1
 fi
 
-# Extract parameters from config file
-PARAMETERS=$(jq -r '.Parameters[] | "\(.ParameterKey)=\(.ParameterValue)"' "$CONFIG_FILE")
-
-# Add RoleExportName if deploying ServiceAccountStack
-if [ "$STACK_KEY" == "ServiceAccountStack" ]; then
-  ROLE_EXPORT_NAME=$(jq -r ".RoleExportName" "$CONFIG_FILE")
-  if [ -n "$ROLE_EXPORT_NAME" ] && [ "$ROLE_EXPORT_NAME" != "null" ]; then
-    PARAMETERS="$PARAMETERS ExportName=$ROLE_EXPORT_NAME"
-  fi
-fi
+# Extract RoleExportName
+ROLE_EXPORT_NAME=$(jq -r ".RoleExportName" "$CONFIG_FILE")
 
 # Deploy the stack
-echo "Deploying stack '$STACK_NAME' with template '$TEMPLATE_FILE' and parameters: $PARAMETERS"
+echo "Deploying stack '$STACK_NAME' with template '$TEMPLATE_FILE' and parameters: $PARAMETERS RoleExportName=$ROLE_EXPORT_NAME"
 aws cloudformation deploy \
   --stack-name "$STACK_NAME" \
   --template-file "$TEMPLATE_FILE" \
   --parameter-overrides $PARAMETERS \
   --capabilities CAPABILITY_NAMED_IAM
+
 
 if [ $? -eq 0 ]; then
   echo "Successfully deployed stack '$STACK_NAME'."
