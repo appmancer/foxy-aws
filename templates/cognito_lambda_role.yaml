@@ -1,13 +1,7 @@
-AWSTemplateFormatVersion: "2010-09-09"
-Description: Create an IAM Role for Lambda with full access to Cognito User Pool operations.
-
 Parameters:
-  EnvironmentName:
+  ExportName:
     Type: String
-    Description: The name of the environment (e.g., dev, staging, production).
-  RoleExportName:
-    Type: String
-    Description: The export name for the Cognito Lambda Execution Role.
+    Description: The name of the export for the Cognito Lambda Execution Role
 
 Resources:
   CognitoLambdaExecutionRole:
@@ -50,8 +44,7 @@ Outputs:
     Description: The ARN of the Cognito Lambda Execution Role
     Value: !GetAtt CognitoLambdaExecutionRole.Arn
   CognitoLambdaExecutionRoleName:
-    Description: The export name of the Cognito Lambda Execution Role
     Value: !Ref CognitoLambdaExecutionRole
     Export:
-      Name: !Ref RoleExportName
+      Name: !Ref ExportName
 
