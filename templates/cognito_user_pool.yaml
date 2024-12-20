@@ -1,0 +1,111 @@
+Resources:
+  CognitoIdentityPool:
+    Type: "AWS::Cognito::IdentityPool"
+    Properties:
+      IdentityPoolName: "DevelopmentIdentityPool"
+      AllowUnauthenticatedIdentities: false
+      CognitoIdentityProviders:
+        - ClientId: !Ref CognitoUserPoolClient
+          ProviderName: !Sub "cognito-idp.${AWS::Region}.amazonaws.com/${CognitoUserPool}"
+
+  CognitoIdentityPoolRoleAttachment:
+    Type: "AWS::Cognito::IdentityPoolRoleAttachment"
+    Properties:
+      IdentityPoolId: !Ref CognitoIdentityPool
+      Roles:
+        authenticated: !GetAtt AuthenticatedRole.Arn
+
+  AuthenticatedRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Federated: "cognito-identity.amazonaws.com"
+            Action: "sts:AssumeRoleWithWebIdentity"
+            Condition:
+              StringEquals:
+                "cognito-identity.amazonaws.com:aud": !Ref CognitoIdentityPool
+              StringLike:
+                "cognito-identity.amazonaws.com:amr": "authenticated"
+      Policies:
+        - PolicyName: "AuthenticatedRolePolicy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action:
+                  - "dynamodb:*"
+                Resource: !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/YourTableName"
+
+  CognitoUserPool:
+    Type: "AWS::Cognito::UserPool"
+    Properties:
+      UserPoolName: "DevelopmentUserPool"
+      AutoVerifiedAttributes:
+        - email
+      Schema:
+        - Name: "sub"
+          AttributeDataType: "String"
+          Mutable: false
+          Required: true
+        - Name: "name"
+          AttributeDataType: "String"
+          Mutable: true
+          Required: true
+        - Name: "email"
+          AttributeDataType: "String"
+          Mutable: true
+          Required: true
+        - Name: "phone_number"
+          AttributeDataType: "String"
+          Mutable: true
+          Required: false
+        - Name: "wallet_address"
+          AttributeDataType: "String"
+          Mutable: true
+          Required: false
+          StringAttributeConstraints:
+            MinLength: "42"
+            MaxLength: "42"
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireUppercase: true
+          RequireLowercase: true
+          RequireNumbers: true
+          RequireSymbols: true
+      UsernameConfiguration:
+        CaseSensitive: false
+      MfaConfiguration: "OFF"
+
+  CognitoUserPoolClient:
+    Type: "AWS::Cognito::UserPoolClient"
+    Properties:
+      UserPoolId: !Ref CognitoUserPool
+      ClientName: "DevelopmentUserPoolClient"
+      GenerateSecret: false
+      ExplicitAuthFlows:
+        - "ADMIN_NO_SRP_AUTH"
+      TokenValidityUnits:
+        AccessToken: "minutes"
+        IdToken: "minutes"
+        RefreshToken: "days"
+      RefreshTokenValidity: 30 # Days
+      AccessTokenValidity: 1439 # Minutes
+      IdTokenValidity: 1439 # Minutes
+
+Outputs:
+  IdentityPoolId:
+    Description: "The ID of the Cognito Identity Pool"
+    Value: !Ref CognitoIdentityPool
+
+  UserPoolId:
+    Description: "The ID of the Cognito User Pool"
+    Value: !Ref CognitoUserPool
+
+  UserPoolClientId:
+    Description: "The Client ID of the Cognito User Pool Client"
+    Value: !Ref CognitoUserPoolClient
