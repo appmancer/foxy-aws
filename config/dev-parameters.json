@@ -16,7 +16,7 @@
       "ParameterValue": "FoxyDevUserPool"
     },
     {
-      "ParameterKey": "RoleExportName",
+      "ParameterKey": "ExportName",
       "ParameterValue": "dev-CognitoLambdaExecutionRoleName"
     }
   ]
