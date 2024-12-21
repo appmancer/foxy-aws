@@ -14,7 +14,7 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
-# Fetch the exported ARN
+# Fetch the exported Role ARN
 ROLE_ARN=$(aws cloudformation list-exports --query "Exports[?Name=='$(jq -r '.Parameters[] | select(.ParameterKey=="ExportName") | .ParameterValue' $CONFIG_FILE)'].Value" --output text)
 if [ -z "$ROLE_ARN" ]; then
   echo "Failed to fetch the Cognito Lambda Execution Role ARN. Aborting."
