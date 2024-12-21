@@ -15,7 +15,10 @@ if [ $? -ne 0 ]; then
 fi
 
 # Fetch the exported Role ARN
-ROLE_ARN=$(aws cloudformation list-exports --query "Exports[?Name=='$(jq -r '.Parameters[] | select(.ParameterKey=="ExportName") | .ParameterValue' $CONFIG_FILE)'].Value" --output text)
+ROLE_EXPORT_NAME=$(jq -r '.Parameters[] | select(.ParameterKey=="ExportName") | .ParameterValue' config/dev-parameters.json)
+ROLE_NAME=$(aws cloudformation list-exports --query "Exports[?Name=='${ROLE_EXPORT_NAME}'].Value" --output text)
+AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query "Account" --output text)
+ROLE_ARN="arn:aws:iam::${AWS_ACCOUNT_ID}:role/${ROLE_NAME}"
 if [ -z "$ROLE_ARN" ]; then
   echo "Failed to fetch the Cognito Lambda Execution Role ARN. Aborting."
   exit 1
