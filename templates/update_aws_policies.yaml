@@ -1,0 +1,41 @@
+Resources:
+  CognitoLambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS:
+                - !Sub "arn:aws:iam::${AWS::AccountId}:user/dev-CognitoServiceAccount"
+            Action: sts:AssumeRole
+      Path: "/"
+      Policies:
+        - PolicyName: "CognitoLambdaExecutionPolicy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - cognito-idp:ListUsers
+                  - cognito-idp:AdminCreateUser
+                  - cognito-idp:AdminSetUserPassword
+                  - cognito-idp:AdminGetUser
+                Resource: !Sub "arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/*"
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: "arn:aws:logs:*:*:*"
+Outputs:
+  RoleArn:
+    Description: "The ARN of the Cognito Lambda Execution Role"
+    Value: !GetAtt CognitoLambdaExecutionRole.Arn
+  CognitoLambdaExecutionRoleName:
+    Description: "The name of the Cognito Lambda Execution Role"
+    Value: !Ref CognitoLambdaExecutionRole
+    Export:
+      Name: "dev-CognitoLambdaExecutionRoleName"
+
