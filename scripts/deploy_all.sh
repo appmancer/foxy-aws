@@ -24,55 +24,33 @@ ENVIRONMENT=$(jq -r '.Environment' $PARAMETERS_FILE)
 REGION=$(jq -r '.Region' $PARAMETERS_FILE)
 ROLE_STACK=$(jq -r '.Stacks.RoleStack' $PARAMETERS_FILE)
 USER_POOL_STACK=$(jq -r '.Stacks.UserPoolStack' $PARAMETERS_FILE)
-SERVICE_ACCOUNT_STACK=$(jq -r '.Stacks.ServiceAccountStack' $PARAMETERS_FILE)
+SERVICE_ACCOUNT_STACK=$(jq -r '.Stacks.ServiceAccountStack // empty' $PARAMETERS_FILE)
 
-# Step 1: Deploy the Role Stack
+# Step 1: Deploy the IAM Role stack
 echo "Deploying IAM Role stack..."
-ROLE_STACK_OUTPUT=$(aws cloudformation deploy \
-  --stack-name $ROLE_STACK \
-  --template-file templates/cognito_lambda_role.yaml \
-  --capabilities CAPABILITY_NAMED_IAM \
-  --parameter-overrides $(jq -r '.Parameters[] | "\(.ParameterKey)=\(.ParameterValue)"' $PARAMETERS_FILE))
+./scripts/deploy_stack.sh cognito_lambda_role.yaml $ROLE_STACK "RoleStack"
+
+# Step 2: Deploy the Cognito User Pool stack
+echo "Deploying Cognito User Pool stack..."
+./scripts/deploy_stack.sh cognito_user_pool.yaml $USER_POOL_STACK "UserPoolStack"
+
+# Step 3: Deploy the Service Accounts stack
+echo "Deploying Service Accounts..."
+if [ -n "$SERVICE_ACCOUNT_STACK" ]; then
+  ./scripts/deploy_stack.sh create_service_accounts.yaml $SERVICE_ACCOUNT_STACK "ServiceAccountStack"
+else
+  echo "No Service Account stack defined. Skipping deployment."
+fi
+
+# Step 4: Deploy Lambda Function
+echo "Deploying Lambda function..."
+LAMBDA_FUNCTION_NAME="CognitoCustomAuthLambda"
+zip -q function.zip ./scripts/custom_auth_lambda.py
 
 LAMBDA_ROLE_ARN=$(aws cloudformation describe-stacks \
   --stack-name $ROLE_STACK \
   --query "Stacks[0].Outputs[?OutputKey=='RoleArn'].OutputValue" \
   --output text)
-
-echo "IAM Role ARN: $LAMBDA_ROLE_ARN"
-
-# Step 2: Deploy the Cognito User Pool Stack
-echo "Deploying Cognito User Pool stack..."
-aws cloudformation deploy \
-  --stack-name $USER_POOL_STACK \
-  --template-file templates/cognito_user_pool.yaml \
-  --capabilities CAPABILITY_NAMED_IAM \
-  --parameter-overrides $(jq -r '.Parameters[] | "\(.ParameterKey)=\(.ParameterValue)"' $PARAMETERS_FILE)
-
-USER_POOL_ID=$(aws cloudformation describe-stacks \
-  --stack-name $USER_POOL_STACK \
-  --query "Stacks[0].Outputs[?OutputKey=='UserPoolId'].OutputValue" \
-  --output text)
-
-USER_POOL_CLIENT_ID=$(aws cloudformation describe-stacks \
-  --stack-name $USER_POOL_STACK \
-  --query "Stacks[0].Outputs[?OutputKey=='UserPoolClientId'].OutputValue" \
-  --output text)
-
-echo "User Pool ID: $USER_POOL_ID"
-echo "User Pool Client ID: $USER_POOL_CLIENT_ID"
-
-# Step 3: Deploy Service Accounts
-echo "Deploying Service Accounts..."
-aws cloudformation deploy \
-  --stack-name $SERVICE_ACCOUNT_STACK \
-  --template-file templates/create_service_accounts.yaml \
-  --parameter-overrides RoleArn=$LAMBDA_ROLE_ARN EnvironmentName=$ENVIRONMENT
-
-# Step 4: Deploy Lambda Function
-echo "Deploying Lambda function..."
-LAMBDA_FUNCTION_NAME="CognitoCustomAuthLambda"
-zip -q function.zip scripts/custom_auth_lambda.py
 
 LAMBDA_ARN=$(aws lambda create-function \
   --function-name $LAMBDA_FUNCTION_NAME \
@@ -94,6 +72,11 @@ echo "Lambda Function ARN: $LAMBDA_ARN"
 
 # Step 5: Attach Lambda to Cognito Triggers
 echo "Configuring Cognito User Pool triggers..."
+USER_POOL_ID=$(aws cloudformation describe-stacks \
+  --stack-name $USER_POOL_STACK \
+  --query "Stacks[0].Outputs[?OutputKey=='UserPoolId'].OutputValue" \
+  --output text)
+
 LAMBDA_CONFIG_FILE="lambda-config.json"
 cat <<EOF > $LAMBDA_CONFIG_FILE
 {
