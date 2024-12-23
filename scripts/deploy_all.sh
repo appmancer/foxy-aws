@@ -80,12 +80,16 @@ LAMBDA_ARN=$(aws lambda create-function \
 
 echo "Lambda Function ARN: $LAMBDA_ARN"
 
-# Step 5: Attach Lambda to Cognito Triggers
 echo "Configuring Cognito User Pool triggers..."
 USER_POOL_ID=$(aws cloudformation describe-stacks \
   --stack-name $USER_POOL_STACK \
   --query "Stacks[0].Outputs[?OutputKey=='UserPoolId'].OutputValue" \
   --output text)
+
+if [ -z "$USER_POOL_ID" ]; then
+  echo "Error: Could not fetch User Pool ID. Exiting."
+  exit 1
+fi
 
 LAMBDA_CONFIG_FILE="lambda-config.json"
 cat <<EOF > $LAMBDA_CONFIG_FILE
@@ -96,12 +100,29 @@ cat <<EOF > $LAMBDA_CONFIG_FILE
 }
 EOF
 
-aws cognito-idp update-user-pool \
+echo "Lambda configuration for Cognito Triggers:"
+cat $LAMBDA_CONFIG_FILE
+
+echo "Updating Cognito User Pool with triggers..."
+UPDATE_OUTPUT=$(aws cognito-idp update-user-pool \
   --user-pool-id $USER_POOL_ID \
   --lambda-config file://$LAMBDA_CONFIG_FILE \
-  --region $REGION
+  --region $REGION 2>&1)
 
-rm -f $LAMBDA_CONFIG_FILE function.zip
+if [ $? -ne 0 ]; then
+  echo "Error: Failed to update User Pool triggers."
+  echo "AWS CLI Output:"
+  echo "$UPDATE_OUTPUT"
+  exit 1
+else
+  echo "Successfully updated User Pool triggers."
+  echo "AWS CLI Output:"
+  echo "$UPDATE_OUTPUT"
+fi
+
+# Cleanup
+rm -f $LAMBDA_CONFIG_FILE
+
 
 echo "Deployment completed successfully!"
 
