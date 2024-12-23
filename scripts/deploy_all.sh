@@ -29,6 +29,16 @@ SERVICE_ACCOUNT_STACK=$(jq -r '.Stacks.ServiceAccountStack // empty' $PARAMETERS
 # Step 1: Deploy the IAM Role stack
 echo "Deploying IAM Role stack..."
 ./scripts/deploy_stack.sh RoleStack templates/cognito_lambda_role.yaml $CONFIG_FILE
+# Fetch the exported Role ARN
+ROLE_EXPORT_NAME=$(jq -r '.Parameters[] | select(.ParameterKey=="ExportName") | .ParameterValue' config/dev-parameters.json)
+ROLE_NAME=$(aws cloudformation list-exports --query "Exports[?Name=='${ROLE_EXPORT_NAME}'].Value" --output text)
+AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query "Account" --output text)
+ROLE_ARN="arn:aws:iam::${AWS_ACCOUNT_ID}:role/${ROLE_NAME}"
+if [ -z "$ROLE_ARN" ]; then
+  echo "Failed to fetch the Cognito Lambda Execution Role ARN. Aborting."
+  exit 1
+fi
+echo "Fetched Role ARN: $ROLE_ARN"
 
 # Step 2: Deploy the Cognito User Pool stack
 echo "Deploying Cognito User Pool stack..."
@@ -37,7 +47,7 @@ echo "Deploying Cognito User Pool stack..."
 # Step 3: Deploy the Service Accounts stack
 echo "Deploying Service Accounts..."
 if [ -n "$SERVICE_ACCOUNT_STACK" ]; then
-  ./scripts/deploy_stack.sh ServiceAccountStack templates/create_service_accounts.yaml $CONFIG_FILE
+  ./scripts/deploy_stack.sh ServiceAccountStack templates/create_service_accounts.yaml $CONFIG_FILE $ROLE_ARN
 else
   echo "No Service Account stack defined. Skipping deployment."
 fi
