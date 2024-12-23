@@ -72,7 +72,7 @@ aws cloudformation deploy \
 # Step 4: Deploy Lambda Function
 echo "Deploying Lambda function..."
 LAMBDA_FUNCTION_NAME="CognitoCustomAuthLambda"
-zip -q function.zip custom_auth_lambda.py
+zip -q function.zip scripts/custom_auth_lambda.py
 
 LAMBDA_ARN=$(aws lambda create-function \
   --function-name $LAMBDA_FUNCTION_NAME \
