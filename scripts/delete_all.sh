@@ -1,26 +1,27 @@
 #!/bin/bash
 
-if [[ $# -ne 1 ]]; then
-    echo "Usage: $0 <parameter-file>"
-    exit 1
+set -e
+
+# Check if configuration file is provided as a parameter
+if [ "$#" -ne 1 ]; then
+  echo "Usage: $0 <config-file>"
+  exit 1
 fi
 
-PARAMETERS_FILE="$1"
+PARAMETERS_FILE=$1
 
-if [[ ! -f "$PARAMETERS_FILE" ]]; then
-    echo "Error: Parameters file $PARAMETERS_FILE not found."
-    exit 1
+# Ensure the configuration file exists
+if [ ! -f "$PARAMETERS_FILE" ]; then
+  echo "Configuration file $PARAMETERS_FILE does not exist."
+  exit 1
 fi
 
-echo "Loading configuration from $PARAMETERS_FILE..."
-ENVIRONMENT=$(jq -r '.Environment' "$PARAMETERS_FILE")
-REGION=$(jq -r '.Region' "$PARAMETERS_FILE")
-ROLE_STACK=$(jq -r '.Stacks.RoleStack' "$PARAMETERS_FILE")
-USER_POOL_STACK=$(jq -r '.Stacks.UserPoolStack' "$PARAMETERS_FILE")
+# Parse parameters
+ENVIRONMENT=$(jq -r '.Environment' $PARAMETERS_FILE)
+REGION=$(jq -r '.Region' $PARAMETERS_FILE)
+ROLE_STACK=$(jq -r '.Stacks.RoleStack' $PARAMETERS_FILE)
+USER_POOL_STACK=$(jq -r '.Stacks.UserPoolStack' $PARAMETERS_FILE)
 SERVICE_ACCOUNT_STACK=$(jq -r '.Stacks.ServiceAccountStack // empty' $PARAMETERS_FILE)
-
-echo "Environment: $ENVIRONMENT"
-echo "Region: $REGION"
 
 # Step 1: Delete the Lambda Function
 echo "Deleting Lambda function..."
@@ -46,14 +47,24 @@ aws cloudformation delete-stack --stack-name $USER_POOL_STACK
 echo "Deleting IAM Role stack..."
 aws cloudformation delete-stack --stack-name $ROLE_STACK
 
-# Step 5: Delete the Lambda Execution Role
-echo "Deleting Lambda execution role..."
+# Step 5: Detach Policies and Delete the Lambda Execution Role
+echo "Detaching policies and deleting Lambda execution role..."
 LAMBDA_ROLE_NAME=$(aws cloudformation describe-stacks \
   --stack-name $ROLE_STACK \
   --query "Stacks[0].Outputs[?OutputKey=='CognitoLambdaExecutionRoleName'].OutputValue" \
   --output text)
 
 if [ -n "$LAMBDA_ROLE_NAME" ]; then
+  ATTACHED_POLICIES=$(aws iam list-attached-role-policies \
+    --role-name $LAMBDA_ROLE_NAME \
+    --query "AttachedPolicies[].PolicyArn" \
+    --output text)
+
+  for POLICY_ARN in $ATTACHED_POLICIES; do
+    echo "Detaching policy $POLICY_ARN from role $LAMBDA_ROLE_NAME..."
+    aws iam detach-role-policy --role-name $LAMBDA_ROLE_NAME --policy-arn $POLICY_ARN
+  done
+
   aws iam delete-role --role-name $LAMBDA_ROLE_NAME || echo "IAM role $LAMBDA_ROLE_NAME does not exist or could not be deleted."
 else
   echo "No Lambda execution role found to delete."
