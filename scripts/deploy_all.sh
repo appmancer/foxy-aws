@@ -30,7 +30,7 @@ SERVICE_ACCOUNT_STACK=$(jq -r '.Stacks.ServiceAccountStack' $PARAMETERS_FILE)
 echo "Deploying IAM Role stack..."
 ROLE_STACK_OUTPUT=$(aws cloudformation deploy \
   --stack-name $ROLE_STACK \
-  --template-file cognito_lambda_role.yaml \
+  --template-file templates/cognito_lambda_role.yaml \
   --capabilities CAPABILITY_NAMED_IAM \
   --parameter-overrides $(jq -r '.Parameters[] | "\(.ParameterKey)=\(.ParameterValue)"' $PARAMETERS_FILE))
 
@@ -45,7 +45,7 @@ echo "IAM Role ARN: $LAMBDA_ROLE_ARN"
 echo "Deploying Cognito User Pool stack..."
 aws cloudformation deploy \
   --stack-name $USER_POOL_STACK \
-  --template-file cognito_user_pool.yaml \
+  --template-file templates/cognito_user_pool.yaml \
   --capabilities CAPABILITY_NAMED_IAM \
   --parameter-overrides $(jq -r '.Parameters[] | "\(.ParameterKey)=\(.ParameterValue)"' $PARAMETERS_FILE)
 
@@ -66,7 +66,7 @@ echo "User Pool Client ID: $USER_POOL_CLIENT_ID"
 echo "Deploying Service Accounts..."
 aws cloudformation deploy \
   --stack-name $SERVICE_ACCOUNT_STACK \
-  --template-file create_service_accounts.yaml \
+  --template-file templates/create_service_accounts.yaml \
   --parameter-overrides RoleArn=$LAMBDA_ROLE_ARN EnvironmentName=$ENVIRONMENT
 
 # Step 4: Deploy Lambda Function
