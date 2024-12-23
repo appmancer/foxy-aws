@@ -28,16 +28,16 @@ SERVICE_ACCOUNT_STACK=$(jq -r '.Stacks.ServiceAccountStack // empty' $PARAMETERS
 
 # Step 1: Deploy the IAM Role stack
 echo "Deploying IAM Role stack..."
-./scripts/deploy_stack.sh cognito_lambda_role.yaml $ROLE_STACK "RoleStack"
+./scripts/deploy_stack.sh templates/cognito_lambda_role.yaml $ROLE_STACK "RoleStack"
 
 # Step 2: Deploy the Cognito User Pool stack
 echo "Deploying Cognito User Pool stack..."
-./scripts/deploy_stack.sh cognito_user_pool.yaml $USER_POOL_STACK "UserPoolStack"
+./scripts/deploy_stack.sh templates/cognito_user_pool.yaml $USER_POOL_STACK "UserPoolStack"
 
 # Step 3: Deploy the Service Accounts stack
 echo "Deploying Service Accounts..."
 if [ -n "$SERVICE_ACCOUNT_STACK" ]; then
-  ./scripts/deploy_stack.sh create_service_accounts.yaml $SERVICE_ACCOUNT_STACK "ServiceAccountStack"
+  ./scripts/deploy_stack.sh templates/create_service_accounts.yaml $SERVICE_ACCOUNT_STACK "ServiceAccountStack"
 else
   echo "No Service Account stack defined. Skipping deployment."
 fi
