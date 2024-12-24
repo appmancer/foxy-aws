@@ -22,7 +22,7 @@ Resources:
             Principal:
               AWS: !Sub "arn:aws:iam::${AWS::AccountId}:user/${EnvironmentName}-CognitoServiceAccount"
             Action: sts:AssumeRole
-      Path: 	"/"
+      Path: "/"
       Policies:
         - PolicyName: "CognitoFullAccessPolicy"
           PolicyDocument:
