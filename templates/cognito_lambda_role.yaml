@@ -2,6 +2,9 @@ Parameters:
   ExportName:
     Type: String
     Description: The name of the export for the Cognito Lambda Execution Role
+  EnvironmentName:
+    Type: String
+    Description: The name of the environment (e.g., dev, staging, production)
 
 Resources:
   CognitoLambdaExecutionRole:
@@ -19,7 +22,7 @@ Resources:
             Principal:
               AWS: !Sub "arn:aws:iam::${AWS::AccountId}:user/${EnvironmentName}-CognitoServiceAccount"
             Action: sts:AssumeRole
-      Path: "/"
+      Path: 	"/"
       Policies:
         - PolicyName: "CognitoFullAccessPolicy"
           PolicyDocument:
