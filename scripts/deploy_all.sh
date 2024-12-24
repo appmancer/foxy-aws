@@ -54,7 +54,7 @@ echo "Deploying Service Accounts..."
 if [ -n "$SERVICE_ACCOUNT_STACK" ]; then
   ./scripts/deploy_stack.sh ServiceAccountStack templates/create_service_accounts.yaml $CONFIG_FILE $ROLE_ARN
 
-  SERVICE_ACCOUNT_ARN="arn:aws:iam::971422686568:user/${ENVIRONMENT_NAME}-CognitoServiceAccount"
+  SERVICE_ACCOUNT_ARN="arn:aws:iam::971422686568:user/${ENVIRONMENT}-CognitoServiceAccount"
 
   # Generate trust-policy.json dynamically
   cat > trust-policy.json <<-EOL

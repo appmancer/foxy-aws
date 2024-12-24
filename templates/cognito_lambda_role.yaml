@@ -18,10 +18,6 @@ Resources:
               Service:
                 - lambda.amazonaws.com
             Action: sts:AssumeRole
-          - Effect: Allow
-            Principal:
-              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:user/${EnvironmentName}-CognitoServiceAccount"
-            Action: sts:AssumeRole
       Path: "/"
       Policies:
         - PolicyName: "CognitoFullAccessPolicy"
@@ -45,7 +41,6 @@ Resources:
                   - "logs:CreateLogStream"
                   - "logs:PutLogEvents"
                 Resource: "arn:aws:logs:*:*:*"
-        
 
 Outputs:
   RoleArn:
