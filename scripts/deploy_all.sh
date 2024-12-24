@@ -35,7 +35,8 @@ if [ $? -ne 0 ]; then
 fi
 
 # Fetch the exported Role ARN
-ROLE_EXPORT_NAME=$(jq -r '.Parameters[] | select(.ParameterKey=="ExportName") | .ParameterValue' config/dev-parameters.json)
+ROLE_EXPORT_NAME=$(jq -r '.Parameters[] | select(.ParameterKey=="ExportName") | .ParameterValue' "$CONFIG_FILE")
+ENVIRONMENT_NAME=$(jq -r '.Parameters[] | select(.ParameterKey=="EnvironmentName") | .ParameterValue' "$CONFIG_FILE")
 ROLE_NAME=$(aws cloudformation list-exports --query "Exports[?Name=='${ROLE_EXPORT_NAME}'].Value" --output text)
 AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query "Account" --output text)
 ROLE_ARN="arn:aws:iam::${AWS_ACCOUNT_ID}:role/${ROLE_NAME}"
@@ -54,7 +55,7 @@ echo "Deploying Service Accounts..."
 if [ -n "$SERVICE_ACCOUNT_STACK" ]; then
   ./scripts/deploy_stack.sh ServiceAccountStack templates/create_service_accounts.yaml $CONFIG_FILE $ROLE_ARN
 
-  SERVICE_ACCOUNT_ARN="arn:aws:iam::971422686568:user/${ENVIRONMENT}-CognitoServiceAccount"
+  SERVICE_ACCOUNT_ARN="arn:aws:iam::971422686568:user/${ENVIRONMENT_NAME}-CognitoServiceAccount"
 
   # Generate trust-policy.json dynamically
   cat > trust-policy.json <<-EOL
