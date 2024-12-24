@@ -86,7 +86,7 @@ EOL
   # Update the trust policy
   echo "Updating trust policy for CognitoLambdaExecutionRole..."
   aws iam update-assume-role-policy \
-      --role-name CognitoLambdaExecutionRole \
+      --role-name "$ROLE_NAME" \
       --policy-document file://trust-policy.json
   if [ $? -ne 0 ]; then
     echo "Failed to update trust policy. Exiting."
