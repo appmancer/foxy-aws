@@ -53,6 +53,45 @@ echo "Deploying Cognito User Pool stack..."
 echo "Deploying Service Accounts..."
 if [ -n "$SERVICE_ACCOUNT_STACK" ]; then
   ./scripts/deploy_stack.sh ServiceAccountStack templates/create_service_accounts.yaml $CONFIG_FILE $ROLE_ARN
+
+  SERVICE_ACCOUNT_ARN="arn:aws:iam::971422686568:user/${ENVIRONMENT_NAME}-CognitoServiceAccount"
+
+  # Generate trust-policy.json dynamically
+  cat > trust-policy.json <<-EOL
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "lambda.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    },
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "${SERVICE_ACCOUNT_ARN}"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOL
+
+  echo "Generated dynamic trust-policy.json:"
+  cat trust-policy.json
+
+  # Update the trust policy
+  echo "Updating trust policy for CognitoLambdaExecutionRole..."
+  aws iam update-assume-role-policy \
+      --role-name CognitoLambdaExecutionRole \
+      --policy-document file://trust-policy.json
+  if [ $? -ne 0 ]; then
+    echo "Failed to update trust policy. Exiting."
+    exit 1
+  fi
+
   if [ $? -ne 0 ]; then
     echo "Failed to deploy service account stack. Exiting."
     exit 1
