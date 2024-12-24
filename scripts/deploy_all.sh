@@ -29,6 +29,11 @@ SERVICE_ACCOUNT_STACK=$(jq -r '.Stacks.ServiceAccountStack // empty' $PARAMETERS
 # Step 1: Deploy the IAM Role stack
 echo "Deploying IAM Role stack..."
 ./scripts/deploy_stack.sh RoleStack templates/cognito_lambda_role.yaml $CONFIG_FILE
+if [ $? -ne 0 ]; then
+  echo "Failed to deploy role stack. Exiting."
+  exit 1
+fi
+
 # Fetch the exported Role ARN
 ROLE_EXPORT_NAME=$(jq -r '.Parameters[] | select(.ParameterKey=="ExportName") | .ParameterValue' config/dev-parameters.json)
 ROLE_NAME=$(aws cloudformation list-exports --query "Exports[?Name=='${ROLE_EXPORT_NAME}'].Value" --output text)
@@ -48,6 +53,10 @@ echo "Deploying Cognito User Pool stack..."
 echo "Deploying Service Accounts..."
 if [ -n "$SERVICE_ACCOUNT_STACK" ]; then
   ./scripts/deploy_stack.sh ServiceAccountStack templates/create_service_accounts.yaml $CONFIG_FILE $ROLE_ARN
+  if [ $? -ne 0 ]; then
+    echo "Failed to deploy service account stack. Exiting."
+    exit 1
+  fi
 else
   echo "No Service Account stack defined. Skipping deployment."
 fi
