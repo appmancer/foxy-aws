@@ -152,6 +152,14 @@ EOF
 echo "Lambda configuration for Cognito Triggers:"
 cat $LAMBDA_CONFIG_FILE
 
+echo "Adding resource-based access policies for Lambda triggers"
+aws lambda add-permission \
+    --function-name $LAMBDA_FUNCTION_NAME \
+    --statement-id CognitoInvokePermission \
+    --action lambda:InvokeFunction \
+    --principal cognito-idp.amazonaws.com \
+    --source-arn arn:aws:cognito-idp:$REGION:$AWS_ACCOUNT_ID:userpool/$USER_POOL_ID
+
 echo "Updating Cognito User Pool with triggers..."
 UPDATE_OUTPUT=$(aws cognito-idp update-user-pool \
   --user-pool-id $USER_POOL_ID \
