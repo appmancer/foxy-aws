@@ -104,7 +104,7 @@ fi
 # Step 4: Deploy Lambda Function
 echo "Deploying Lambda function..."
 LAMBDA_FUNCTION_NAME="CognitoCustomAuthLambda"
-zip -q function.zip ./scripts/custom_auth_lambda.py
+zip -q -j function.zip ./scripts/custom_auth_lambda.py
 
 LAMBDA_ROLE_ARN=$(aws cloudformation describe-stacks \
   --stack-name $ROLE_STACK \
