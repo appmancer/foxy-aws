@@ -180,6 +180,8 @@ fi
 # Cleanup
 rm -f $LAMBDA_CONFIG_FILE
 
+echo "Starting database build"
+./scripts/deploy_rds.sh $ENVIRONMENT
 
 echo "Deployment completed successfully!"
 
