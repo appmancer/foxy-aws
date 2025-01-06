@@ -87,7 +87,7 @@ Resources:
       AllocatedStorage: ${ALLOCATED_STORAGE}
       Engine: postgres
       DBName: ${DB_NAME}
-      MasterUsername: foxy-db-admin
+      MasterUsername: foxydbadmin
       MasterUserPassword: ${MASTER_PASSWORD}
       VPCSecurityGroups:
         - ${SG_ID}
