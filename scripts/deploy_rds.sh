@@ -22,8 +22,11 @@ read -p "Is this a production environment? (y/n): " PRODUCTION
 if [[ "$PRODUCTION" == "y" || "$PRODUCTION" == "Y" ]]; then
   USE_MULTI_AZ="true"
   ENABLE_IAM_AUTH="true"
+  MASTER_PASSWORD="Placeholder@123"
   echo "Configuring for production..."
 else
+  MASTER_PASSWORD=$(openssl rand -base64 16) # Generate a secure random password
+  ENABLE_IAM_AUTH="false"
   echo "Configuring for development..."
 fi
 
@@ -84,6 +87,8 @@ Resources:
       AllocatedStorage: ${ALLOCATED_STORAGE}
       Engine: postgres
       DBName: ${DB_NAME}
+      MasterUsername: admin
+      MasterUserPassword: ${MASTER_PASSWORD}
       VPCSecurityGroups:
         - ${SG_ID}
       DBSubnetGroupName: !Ref DBSubnetGroup
@@ -134,6 +139,7 @@ if [[ "$PRODUCTION" != "y" && "$PRODUCTION" != "Y" ]]; then
   echo "DB_HOST=$DB_ENDPOINT"
   echo "DB_PORT=$DB_PORT"
   echo "DB_NAME=$DB_NAME"
+  echo "DB_MASTER_PASSWORD=$MASTER_PASSWORD"
 fi
 
 # Update IAM role for Lambda (Production only)
