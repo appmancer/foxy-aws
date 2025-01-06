@@ -10,6 +10,7 @@ DB_NAME="foxydb"
 REGION="us-east-1"
 USE_MULTI_AZ="false"
 ENABLE_IAM_AUTH="false"
+SQL_FILE="./templates/schema.sql"
 
 if [[ -z "$ENVIRONMENT_NAME" ]]; then
   echo "Usage: $0 <environment-name>"
@@ -131,6 +132,32 @@ aws cloudformation deploy \
   --template-file $CF_TEMPLATE \
   --parameter-overrides EnvironmentName=$ENVIRONMENT_NAME \
   --capabilities CAPABILITY_NAMED_IAM
+
+echo "Loading schema"
+
+# Install `psql` if not already installed
+if ! command -v psql &> /dev/null; then
+  echo "psql not found. Installing PostgreSQL client..."
+  sudo yum install -y postgresql # For Amazon Linux/CloudShell
+  echo "psql installed successfully."
+fi
+
+# Check if the SQL file exists
+if [[ ! -f $SQL_FILE ]]; then
+  echo "Error: Schema not found!"
+  exit 1
+fi
+
+
+echo "Executing SQL commands from '$SQL_FILE'..."
+PGPASSWORD=$DB_PASSWORD psql \
+    --host=$DB_ENDPOINT \
+    --port=$DB_PORT \
+    --username=$DB_USER \
+    --dbname=$DB_NAME \
+    --file=$SQL_FILE
+
+echo "SQL commands executed successfully."
 
 # Fetch and display outputs
 echo "Fetching RDS Outputs..."
