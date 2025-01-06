@@ -4,7 +4,8 @@
   "Stacks": {
     "RoleStack": "foxy-role",
     "UserPoolStack": "foxy-dev",
-    "ServiceAccountStack": "foxy-service-accounts"
+    "ServiceAccountStack": "foxy-service-accounts",
+    "DatabaseStack": "dev-rds-stack"
   },
   "Parameters": [
     {

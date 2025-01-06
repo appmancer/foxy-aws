@@ -22,6 +22,13 @@ REGION=$(jq -r '.Region' $PARAMETERS_FILE)
 ROLE_STACK=$(jq -r '.Stacks.RoleStack' $PARAMETERS_FILE)
 USER_POOL_STACK=$(jq -r '.Stacks.UserPoolStack' $PARAMETERS_FILE)
 SERVICE_ACCOUNT_STACK=$(jq -r '.Stacks.ServiceAccountStack // empty' $PARAMETERS_FILE)
+DATABASE_STACK=$(jq -r '.Stacks.ServiceAccountStack // empty' $PARAMETERS_FILE)
+
+# Step 0: Delete the database
+if [ -n "$DATABASE_STACK" ]; then
+  echo "Deleting Database stack..."
+  aws cloudformation delete-stack --stack-name $DATABASE_STACK
+fi
 
 # Step 1: Delete the Lambda Function
 echo "Deleting Lambda function..."
