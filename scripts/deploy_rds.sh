@@ -17,6 +17,10 @@ if [[ -z "$ENVIRONMENT_NAME" ]]; then
   exit 1
 fi
 
+generate_master_password() {
+  openssl rand -base64 16 | tr -d '/@" ' | cut -c1-16
+}
+
 # Prompt for production vs. development settings
 read -p "Is this a production environment? (y/n): " PRODUCTION
 
@@ -26,7 +30,8 @@ if [[ "$PRODUCTION" == "y" || "$PRODUCTION" == "Y" ]]; then
   MASTER_PASSWORD="Placeholder@123"
   echo "Configuring for production..."
 else
-  MASTER_PASSWORD=$(openssl rand -base64 16) # Generate a secure random password
+  MASTER_PASSWORD=$(generate_master_password)
+  echo "Generated password: $MASTER_PASSWORD"
   ENABLE_IAM_AUTH="false"
   echo "Configuring for development..."
 fi
