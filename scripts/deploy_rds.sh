@@ -139,13 +139,8 @@ aws cloudformation deploy \
   --capabilities CAPABILITY_NAMED_IAM
 
 echo "Loading schema"
-
-# Install `psql` if not already installed
-if ! command -v psql &> /dev/null; then
-  echo "psql not found. Installing PostgreSQL client..."
-  sudo yum install -y postgresql # For Amazon Linux/CloudShell
-  echo "psql installed successfully."
-fi
+sudo yum install -y postgresql # For Amazon Linux/CloudShell
+echo "psql installed successfully."
 
 # Check if the SQL file exists
 if [[ ! -f $SQL_FILE ]]; then
