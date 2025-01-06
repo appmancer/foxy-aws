@@ -58,6 +58,13 @@ if [[ -z "$SG_ID" ]]; then
 fi
 echo "Default Security Group ID: $SG_ID"
 
+echo "Retrieving default monitoring role"
+MONITORING_ROLE_ARN=$(aws cloudformation list-exports --query "Exports[?Name=='${ENVIRONMENT_NAME}-RDSMonitoringRoleArn'].Value" --output text)
+if [[ -z "$MONITORING_ROLE_ARN" ]]; then
+  echo "Error: Could not retrieve RDS Monitoring Role ARN."
+  exit 1
+fi
+
 # Generate a CloudFormation template dynamically
 CF_TEMPLATE="rds_template_${ENVIRONMENT_NAME}.yaml"
 echo "Generating CloudFormation template: $CF_TEMPLATE..."
@@ -98,6 +105,7 @@ Resources:
       PubliclyAccessible: false
       BackupRetentionPeriod: 7
       MonitoringInterval: 60
+      MonitoringRoleArn: ${MONITORING_ROLE_ARN}
       EnablePerformanceInsights: ${ENABLE_IAM_AUTH}
       Tags:
         - Key: Environment
