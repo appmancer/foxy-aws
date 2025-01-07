@@ -152,25 +152,21 @@ LAMBDA_ROLE_NAME=$(aws cloudformation describe-stacks \
   --query "Stacks[0].Outputs[?OutputKey=='CognitoLambdaExecutionRoleName'].OutputValue" \
   --output text 2>/dev/null || echo "ROLE_NOT_FOUND")
 
-  if [ "$LAMBDA_ROLE_NAME" == "ROLE_NOT_FOUND" ]; then
-    echo "Role $LAMBDA_ROLE_NAME does not exist. Skipping."
-  else
-    ATTACHED_POLICIES=$(aws iam list-attached-role-policies \
-      --role-name $LAMBDA_ROLE_NAME \
-      --query "AttachedPolicies[].PolicyArn" \
-      --output text)
-
-    for POLICY_ARN in $ATTACHED_POLICIES; do
-      echo "Detaching policy $POLICY_ARN from role $LAMBDA_ROLE_NAME..."
-      aws iam detach-role-policy --role-name $LAMBDA_ROLE_NAME --policy-arn $POLICY_ARN
-    done
-  fi
-  
-  aws iam delete-role --role-name $LAMBDA_ROLE_NAME || echo "IAM role $LAMBDA_ROLE_NAME does not exist or could not be deleted."
+if [ "$LAMBDA_ROLE_NAME" == "ROLE_NOT_FOUND" ]; then
+  echo "Role $LAMBDA_ROLE_NAME does not exist. Skipping."
 else
-  echo "No Lambda execution role found to delete."
-fi
+  ATTACHED_POLICIES=$(aws iam list-attached-role-policies \
+    --role-name $LAMBDA_ROLE_NAME \
+    --query "AttachedPolicies[].PolicyArn" \
+    --output text)
 
+  for POLICY_ARN in $ATTACHED_POLICIES; do
+    echo "Detaching policy $POLICY_ARN from role $LAMBDA_ROLE_NAME..."
+    aws iam detach-role-policy --role-name $LAMBDA_ROLE_NAME --policy-arn $POLICY_ARN
+  done
+fi
+echo "Deleting IAM role $LAMBDA_ROLE_NAME..."
+aws iam delete-role --role-name $LAMBDA_ROLE_NAME || echo "IAM role $LAMBDA_ROLE_NAME does not exist or could not be deleted."
 
 # Step 4: Delete the Role Stack
 delete_stack "$ROLE_STACK"
