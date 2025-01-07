@@ -32,22 +32,23 @@ delete_stack() {
 
   echo "Checking if stack $stack_name exists..."
 
-  # Query CloudFormation to check the stack status
+  # Query CloudFormation to check the stack status, handle missing stack gracefully
   stack_status=$(aws cloudformation describe-stacks \
     --stack-name "$stack_name" \
     --query "Stacks[0].StackStatus" \
-    --output text 2>/dev/null)
+    --output text 2>/dev/null || echo "STACK_NOT_FOUND")
 
   # Check the stack status
   if [ "$stack_status" == "CREATE_COMPLETE" ] || [ "$stack_status" == "UPDATE_COMPLETE" ] || [ "$stack_status" == "ROLLBACK_COMPLETE" ]; then
     echo "Stack $stack_name exists with status $stack_status. Deleting..."
     aws cloudformation delete-stack --stack-name "$stack_name"
     echo "Stack $stack_name deletion initiated."
-    aws cloudformation wait stack-delete-complete --stack-name "$stack_name" || echo "$stack_name stack deletion completed."
   elif [ "$stack_status" == "DELETE_COMPLETE" ]; then
     echo "Stack $stack_name has already been deleted."
+  elif [ "$stack_status" == "STACK_NOT_FOUND" ]; then
+    echo "Stack $stack_name does not exist. Skipping."
   else
-    echo "Stack $stack_name does not exist or is in an unexpected state: $stack_status."
+    echo "Stack $stack_name is in an unexpected state: $stack_status."
   fi
 }
 
