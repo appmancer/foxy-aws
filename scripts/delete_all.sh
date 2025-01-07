@@ -35,17 +35,23 @@ for FUNCTION in $LAMBDA_FUNCTIONS; do
   aws lambda delete-function --function-name $FUNCTION
 done
 
+
 # Step 2: Detach and Delete Policies
 echo "Detaching and deleting custom IAM policies..."
-POLICIES=$(aws iam list-policies --scope Local --output text)
+
+# Extract only the PolicyArn column
+POLICIES=$(aws iam list-policies --scope Local --query "Policies[].Arn" --output text)
+
 for POLICY_ARN in $POLICIES; do
   echo "Detaching and deleting policy: $POLICY_ARN"
+
   # Detach the policy from all roles
   ROLES=$(aws iam list-entities-for-policy --policy-arn $POLICY_ARN --query "PolicyRoles[].RoleName" --output text)
   for ROLE in $ROLES; do
     echo "Detaching policy from role: $ROLE"
     aws iam detach-role-policy --role-name $ROLE --policy-arn $POLICY_ARN
   done
+
   # Delete the policy
   aws iam delete-policy --policy-arn $POLICY_ARN
 done
