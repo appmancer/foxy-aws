@@ -160,16 +160,16 @@ DB_RESOURCE_ID=$(aws cloudformation describe-stacks --stack-name $STACK_NAME --q
 echo "RDS Endpoint: $DB_ENDPOINT"
 echo "RDS Port: $DB_PORT"
 
-echo "Getting the LambdaRDSAccessRole ARN"
-DATABASE_ACCESS_ROLE_ARN=$(aws cloudformation describe-stacks \
-    --stack-name $STACK_NAME \
-    --query "Stacks[0].Outputs[?OutputKey=='DatabaseAccessRole'].OutputValue" \
-    --output text)
-echo $DATABASE_ACCESS_ROLE_ARN
+echo "Getting the DatabaseAccessRole ARN"
+DATABASE_ROLE_ARN=$(aws iam list-roles \
+  --query "Roles[*].Arn" --output json | \
+  jq -r '.[] | select(contains("DatabaseAccessRole"))')
+
+echo "DATABASE_ACCESS_ROLE_ARN:$DATABASE_ACCESS_ROLE_ARN"
 
 echo "Creating service user lambda"
 CREATE_USER_FUNCTION_NAME="create-user"
-zip -q -j create_user_lambda.zip ./scripts/create_user_lambda.py"
+zip -q -j create_user_lambda.zip ./scripts/create_user_lambda.py
 
 aws lambda create-function \
     --function-name $CREATE_USER_FUNCTION_NAME \
@@ -196,6 +196,7 @@ if grep -q '"statusCode": 200' response.json; then
    
    # Clean up temporary files
    rm -f response.json
+   rm -f create_user_lambda.zip
 else
     echo "Error: Lambda execution failed. Check response.json or CloudWatch logs for details."
     exit 1

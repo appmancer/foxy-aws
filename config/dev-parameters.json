@@ -2,10 +2,10 @@
   "Environment": "Development",
   "Region": "eu-north-1",
   "Stacks": {
-    "RoleStack": "foxy-role",
+    "RoleStack": "foxy-dev-role",
     "UserPoolStack": "foxy-dev",
-    "ServiceAccountStack": "foxy-service-accounts",
-    "DatabaseStack": "dev-rds-stack"
+    "ServiceAccountStack": "foxy-dev-service-accounts",
+    "DatabaseStack": "foxy-dev-rds-stack"
   },
   "Parameters": [
     {

@@ -8,5 +8,7 @@ if [[ -z "$STACK_NAME" ]]; then
   exit 1
 fi
 
-aws cloudformation delete-stack --stack-name "$STACK_NAME"
+aws cloudformation delete-stack --stack-name
 echo "Deleting stack $STACK_NAME. This may take a few minutes."
+aws cloudformation wait stack-delete-complete --stack-name "$STACK_NAME"
+echo "Finished"
