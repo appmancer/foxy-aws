@@ -146,10 +146,11 @@ delete_stack "$USER_POOL_STACK"
 
 # Step 5: Detach Policies and Delete the Lambda Execution Role
 echo "Detaching policies and deleting Lambda execution role..."
+
 LAMBDA_ROLE_NAME=$(aws cloudformation describe-stacks \
   --stack-name $ROLE_STACK \
   --query "Stacks[0].Outputs[?OutputKey=='CognitoLambdaExecutionRoleName'].OutputValue" \
-  --output text)
+  --output text 2>/dev/null || echo "ROLE_NOT_FOUND")
 
 if [ -n "$LAMBDA_ROLE_NAME" ]; then
   ATTACHED_POLICIES=$(aws iam list-attached-role-policies \
