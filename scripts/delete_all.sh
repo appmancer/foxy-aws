@@ -124,9 +124,6 @@ fi
 echo "Deleting Cognito User Pool stack..."
 aws cloudformation delete-stack --stack-name $USER_POOL_STACK
 
-# Step 4: Delete the Role Stack
-echo "Deleting IAM Role stack..."
-aws cloudformation delete-stack --stack-name $ROLE_STACK
 
 # Step 5: Detach Policies and Delete the Lambda Execution Role
 echo "Detaching policies and deleting Lambda execution role..."
@@ -150,6 +147,11 @@ if [ -n "$LAMBDA_ROLE_NAME" ]; then
 else
   echo "No Lambda execution role found to delete."
 fi
+
+
+# Step 4: Delete the Role Stack
+echo "Deleting IAM Role stack..."
+aws cloudformation delete-stack --stack-name $ROLE_STACK
 
 # Wait for stacks to be deleted
 echo "Waiting for stacks to be deleted..."
