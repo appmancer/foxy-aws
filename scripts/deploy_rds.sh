@@ -17,6 +17,7 @@ PARAMETERS_FILE=$CONFIG_FILE
 
 # Parse parameters
 ENVIRONMENT=$(jq -r '.Environment' $PARAMETERS_FILE)
+ENVIRONMENT_NAME=$(jq -r '.Parameters[] | select(.ParameterKey=="EnvironmentName") | .ParameterValue' "$CONFIG_FILE")
 ROLE_STACK=$(jq -r '.Stacks.RoleStack' $PARAMETERS_FILE)
 
 DB_INSTANCE_CLASS="db.t3.micro"
@@ -77,7 +78,7 @@ fi
 echo "Default Security Group ID: $SG_ID"
 
 echo "Retrieving default monitoring role"
-MONITORING_ROLE_ARN=$(aws cloudformation list-exports --query "Exports[?Name=='${ENVIRONMENT}-RDSMonitoringRoleArn'].Value" --output text)
+MONITORING_ROLE_ARN=$(aws cloudformation list-exports --query "Exports[?Name=='${ENVIRONMENT_NAME}-RDSMonitoringRoleArn'].Value" --output text)
 if [[ -z "$MONITORING_ROLE_ARN" ]]; then
   echo "Error: Could not retrieve RDS Monitoring Role ARN."
   exit 1
@@ -142,14 +143,13 @@ Outputs:
 EOF
 
 # Deploy the stack
-STACK_NAME="${ENVIRONMENT}-rds-stack"
+STACK_NAME="${ENVIRONMENT_NAME}-rds-stack"
 echo "Deploying CloudFormation stack: $STACK_NAME..."
 aws cloudformation deploy \
   --stack-name $STACK_NAME \
   --template-file $CF_TEMPLATE \
-  --parameter-overrides EnvironmentName=$ENVIRONMENT \
+  --parameter-overrides EnvironmentName=$ENVIRONMENT_NAME \
   --capabilities CAPABILITY_NAMED_IAM
-
 
 # Fetch and display outputs
 echo "Fetching RDS Outputs..."

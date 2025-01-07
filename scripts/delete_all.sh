@@ -147,8 +147,6 @@ fi
 # Wait for stacks to be deleted
 echo "Waiting for stacks to be deleted..."
 aws cloudformation wait stack-delete-complete --stack-name $USER_POOL_STACK || echo "User Pool stack deletion completed."
-aws cloudformation wait stack-delete-complete --stack-name $ROLE_STACK || echo "IAM Role stack deletion completed."
-
 
 echo "Environment reset completed successfully!"
 
