@@ -28,7 +28,7 @@ SERVICE_ACCOUNT_STACK=$(jq -r '.Stacks.ServiceAccountStack // empty' $PARAMETERS
 
 # Step 1: Deploy the IAM Role stack
 echo "Deploying IAM Role stack..."
-./scripts/deploy_stack.sh RoleStack templates/cognito_lambda_role.yaml $CONFIG_FILE
+./scripts/deploy_stack.sh $ROLE_STACK templates/cognito_lambda_role.yaml $CONFIG_FILE
 if [ $? -ne 0 ]; then
   echo "Failed to deploy role stack. Exiting."
   exit 1
