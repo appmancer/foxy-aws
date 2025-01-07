@@ -25,6 +25,32 @@ SERVICE_ACCOUNT_STACK=$(jq -r '.Stacks.ServiceAccountStack // empty' $PARAMETERS
 DATABASE_STACK=$(jq -r '.Stacks.DatabaseStack // empty' $PARAMETERS_FILE)
 PREFIX="foxy"
 
+# Function to check if a stack exists and delete it
+delete_stack() {
+  local stack_name=$1
+  local stack_status
+
+  echo "Checking if stack $stack_name exists..."
+
+  # Query CloudFormation to check the stack status
+  stack_status=$(aws cloudformation describe-stacks \
+    --stack-name "$stack_name" \
+    --query "Stacks[0].StackStatus" \
+    --output text 2>/dev/null)
+
+  # Check the stack status
+  if [ "$stack_status" == "CREATE_COMPLETE" ] || [ "$stack_status" == "UPDATE_COMPLETE" ] || [ "$stack_status" == "ROLLBACK_COMPLETE" ]; then
+    echo "Stack $stack_name exists with status $stack_status. Deleting..."
+    aws cloudformation delete-stack --stack-name "$stack_name"
+    echo "Stack $stack_name deletion initiated."
+    aws cloudformation wait stack-delete-complete --stack-name "$stack_name" || echo "$stack_name stack deletion completed."
+  elif [ "$stack_status" == "DELETE_COMPLETE" ]; then
+    echo "Stack $stack_name has already been deleted."
+  else
+    echo "Stack $stack_name does not exist or is in an unexpected state: $stack_status."
+  fi
+}
+
 echo "Starting cleanup for environment: $ENVIRONMENT..."
 
 # Step 1: Delete Lambda Functions
@@ -107,23 +133,15 @@ echo "Cleanup complete for environment: $ENVIRONMENT."
 
 # Step 1: Delete the database
 if [ -n "$DATABASE_STACK" ]; then
-  echo "Deleting Database stack..."
-  aws cloudformation delete-stack --stack-name $DATABASE_STACK
+ delete_stack "$DATABASE_STACK"
 fi
 
 # Step 2: Delete the Service Account Stack
-if [ -n "$SERVICE_ACCOUNT_STACK" ]; then
-  echo "Deleting Service Account stack..."
-  aws cloudformation delete-stack --stack-name $SERVICE_ACCOUNT_STACK
-  aws cloudformation wait stack-delete-complete --stack-name $SERVICE_ACCOUNT_STACK || echo "Service Account stack deletion completed."
-else
-  echo "No Service Account stack defined. Skipping deletion."
-fi
+delete_stack "$SERVICE_ACCOUNT_STACK"
 
 # Step 3: Delete the Cognito User Pool Stack
 echo "Deleting Cognito User Pool stack..."
-aws cloudformation delete-stack --stack-name $USER_POOL_STACK
-
+delete_stack "$USER_POOL_STACK"
 
 # Step 5: Detach Policies and Delete the Lambda Execution Role
 echo "Detaching policies and deleting Lambda execution role..."
@@ -150,8 +168,7 @@ fi
 
 
 # Step 4: Delete the Role Stack
-echo "Deleting IAM Role stack..."
-aws cloudformation delete-stack --stack-name $ROLE_STACK
+delete_stack "$ROLE_STACK"
 
 # Wait for stacks to be deleted
 echo "Waiting for stacks to be deleted..."
