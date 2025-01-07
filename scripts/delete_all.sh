@@ -35,26 +35,43 @@ for FUNCTION in $LAMBDA_FUNCTIONS; do
   aws lambda delete-function --function-name $FUNCTION
 done
 
-
 # Step 2: Detach and Delete Policies
 echo "Detaching and deleting custom IAM policies..."
 
 # Extract only the PolicyArn column
 POLICIES=$(aws iam list-policies --scope Local --query "Policies[].Arn" --output text)
 
-for POLICY_ARN in $POLICIES; do
-  echo "Detaching and deleting policy: $POLICY_ARN"
+if [ -z "$POLICIES" ]; then
+  echo "No policies found to delete."
+else
+  for POLICY_ARN in $POLICIES; do
+    echo "Processing policy: $POLICY_ARN"
 
-  # Detach the policy from all roles
-  ROLES=$(aws iam list-entities-for-policy --policy-arn $POLICY_ARN --query "PolicyRoles[].RoleName" --output text)
-  for ROLE in $ROLES; do
-    echo "Detaching policy from role: $ROLE"
-    aws iam detach-role-policy --role-name $ROLE --policy-arn $POLICY_ARN
+    # Detach the policy from all roles
+    ROLES=$(aws iam list-entities-for-policy --policy-arn $POLICY_ARN --query "PolicyRoles[].RoleName" --output text)
+    if [ -n "$ROLES" ]; then
+      for ROLE in $ROLES; do
+        echo "Detaching policy from role: $ROLE"
+        aws iam detach-role-policy --role-name $ROLE --policy-arn $POLICY_ARN || echo "Failed to detach policy $POLICY_ARN from role $ROLE"
+      done
+    fi
+
+    # Delete all non-default versions of the policy
+    echo "Deleting non-default policy versions for: $POLICY_ARN"
+    VERSIONS=$(aws iam list-policy-versions --policy-arn $POLICY_ARN --query "Versions[?IsDefaultVersion==\`false\`].VersionId" --output text)
+    if [ -n "$VERSIONS" ]; then
+      for VERSION in $VERSIONS; do
+        echo "Deleting policy version: $VERSION"
+        aws iam delete-policy-version --policy-arn $POLICY_ARN --version-id $VERSION || echo "Failed to delete version $VERSION of policy $POLICY_ARN"
+      done
+    fi
+
+    # Delete the policy
+    echo "Deleting policy: $POLICY_ARN"
+    aws iam delete-policy --policy-arn $POLICY_ARN || echo "Failed to delete policy $POLICY_ARN"
   done
+fi
 
-  # Delete the policy
-  aws iam delete-policy --policy-arn $POLICY_ARN
-done
 
 # Step 3: Delete IAM Roles
 echo "Deleting IAM roles..."
