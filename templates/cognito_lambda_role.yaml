@@ -106,6 +106,12 @@ Outputs:
     Description: The ARN of the Cognito Lambda Execution Role
     Value: !GetAtt CognitoLambdaExecutionRole.Arn
 
+  CognitoLambdaExecutionRoleName:
+    Description: The name of the Cognito Lambda Execution Role
+    Value: !Ref CognitoLambdaExecutionRole
+    Export:
+      Name: !Sub "${EnvironmentName}-CognitoLambdaExecutionRoleName"
+      
   RDSMonitoringRoleArn:
     Description: The ARN of the RDS Monitoring Role
     Value: !GetAtt RDSMonitoringRole.Arn
