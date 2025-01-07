@@ -146,13 +146,13 @@ if [[ ! -f $SQL_FILE ]]; then
   exit 1
 fi
 
-echo "Executing SQL commands from '$SQL_FILE'..."
-PGPASSWORD=$DB_PASSWORD psql \
-    --host=$DB_ENDPOINT \
-    --port=$DB_PORT \
-    --username=$DB_USER \
-    --dbname=$DB_NAME \
-    --file=$SQL_FILE
+
+# Construct the psql command
+PSQL_COMMAND="PGPASSWORD=$DB_PASSWORD psql --host=$DB_ENDPOINT --port=$DB_PORT --username=$DB_USER --dbname=$DB_NAME --file=$SQL_FILE"
+echo "Executing: PGPASSWORD=$DB_PASSWORD psql --host=$DB_ENDPOINT --port=$DB_PORT --username=$DB_USER --dbname=$DB_NAME --file=$SQL_FILE"
+
+# Execute the psql command
+eval $PSQL_COMMAND
 
 echo "SQL commands executed successfully."
 
