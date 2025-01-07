@@ -6,6 +6,7 @@ set -e
 ENVIRONMENT_NAME=$1
 DB_INSTANCE_CLASS="db.t3.micro"
 ALLOCATED_STORAGE="20"
+DB_USER="foxydbadmin"
 DB_NAME="foxydb"
 REGION="us-east-1"
 USE_MULTI_AZ="false"
@@ -21,7 +22,7 @@ generate_master_password() {
   openssl rand -base64 16 | tr -d '/@" ' | cut -c1-16
 }
 
-# Prompt for production vs. development settings
+# Prompt for production vs. development settingsDB_USER
 read -p "Is this a production environment? (y/n): " PRODUCTION
 
 if [[ "$PRODUCTION" == "y" || "$PRODUCTION" == "Y" ]]; then
@@ -100,7 +101,7 @@ Resources:
       AllocatedStorage: ${ALLOCATED_STORAGE}
       Engine: postgres
       DBName: ${DB_NAME}
-      MasterUsername: foxydbadmin
+      MasterUsername: ${DB_USER}
       MasterUserPassword: ${MASTER_PASSWORD}
       VPCSecurityGroups:
         - ${SG_ID}
@@ -138,23 +139,6 @@ aws cloudformation deploy \
   --parameter-overrides EnvironmentName=$ENVIRONMENT_NAME \
   --capabilities CAPABILITY_NAMED_IAM
 
-echo "Loading schema"
-
-# Check if the SQL file exists
-if [[ ! -f $SQL_FILE ]]; then
-  echo "Error: Schema not found!"
-  exit 1
-fi
-
-
-# Construct the psql command
-PSQL_COMMAND="PGPASSWORD=$DB_PASSWORD psql --host=$DB_ENDPOINT --port=$DB_PORT --username=$DB_USER --dbname=$DB_NAME --file=$SQL_FILE"
-echo "Executing: PGPASSWORD=$DB_PASSWORD psql --host=$DB_ENDPOINT --port=$DB_PORT --username=$DB_USER --dbname=$DB_NAME --file=$SQL_FILE"
-
-# Execute the psql command
-eval $PSQL_COMMAND
-
-echo "SQL commands executed successfully."
 
 # Fetch and display outputs
 echo "Fetching RDS Outputs..."
@@ -164,6 +148,23 @@ DB_RESOURCE_ID=$(aws cloudformation describe-stacks --stack-name $STACK_NAME --q
 
 echo "RDS Endpoint: $DB_ENDPOINT"
 echo "RDS Port: $DB_PORT"
+
+echo "Loading schema"
+
+# Check if the SQL file exists
+if [[ ! -f $SQL_FILE ]]; then
+  echo "Error: Schema not found!"
+  exit 1
+fi
+
+# Construct the psql command
+PSQL_COMMAND="PGPASSWORD=$MASTER_PASSWORD psql --host=$DB_ENDPOINT --port=$DB_PORT --username=$DB_USER --dbname=$DB_NAME --file=$SQL_FILE"
+echo "Executing: $PSQL_COMMAND"
+
+# Execute the psql command
+eval $PSQL_COMMAND
+
+echo "SQL commands executed successfully."
 
 # Suggest adding details to .env for dev
 if [[ "$PRODUCTION" != "y" && "$PRODUCTION" != "Y" ]]; then
