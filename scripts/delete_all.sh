@@ -60,9 +60,18 @@ done
 
 # Step 4: Delete S3 Bucket
 BUCKET_NAME="${PREFIX}-schema-deployments-${ENVIRONMENT}"
-echo "Deleting S3 bucket: $BUCKET_NAME"
-aws s3 rm s3://$BUCKET_NAME --recursive
-aws s3api delete-bucket --bucket $BUCKET_NAME --region $REGION
+echo "Checking if S3 bucket exists: $BUCKET_NAME"
+
+# Check if the bucket exists
+if aws s3api head-bucket --bucket $BUCKET_NAME 2>/dev/null; then
+  echo "Deleting S3 bucket: $BUCKET_NAME"
+  aws s3 rm s3://$BUCKET_NAME --recursive
+  aws s3api delete-bucket --bucket $BUCKET_NAME --region $REGION
+  echo "Bucket $BUCKET_NAME deleted successfully."
+else
+  echo "S3 bucket $BUCKET_NAME does not exist. Skipping deletion."
+fi
+
 
 echo "Cleanup complete for environment: $ENVIRONMENT."
 
