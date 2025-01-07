@@ -37,7 +37,7 @@ done
 
 # Step 2: Detach and Delete Policies
 echo "Detaching and deleting custom IAM policies..."
-POLICIES=$(aws iam list-policies --scope Local --query "Policies[?starts_with(PolicyName, \`${PREFIX}-${ENVIRONMENT}\`)].Arn" --output text)
+POLICIES=$(aws iam list-policies --scope Local --output text)
 for POLICY_ARN in $POLICIES; do
   echo "Detaching and deleting policy: $POLICY_ARN"
   # Detach the policy from all roles
