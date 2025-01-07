@@ -112,9 +112,9 @@ Outputs:
     Export:
       Name: !Sub "${EnvironmentName}-RDSMonitoringRoleArn"
 
-  LambdaRDSAccessRoleArn:
+  DatabaseAccessRoleArn:
     Description: The ARN of the Lambda RDS Access Role
-    Value: !GetAtt LambdaRDSAccessRole.Arn
+    Value: !GetAtt DatabaseAccessRole.Arn
     Export:
-      Name: !Sub "${EnvironmentName}-LambdaRDSAccessRoleArn"
+      Name: !Sub "${EnvironmentName}-DatabaseAccessRoleArn"
 
