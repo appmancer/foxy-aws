@@ -164,9 +164,10 @@ else
     echo "Detaching policy $POLICY_ARN from role $LAMBDA_ROLE_NAME..."
     aws iam detach-role-policy --role-name $LAMBDA_ROLE_NAME --policy-arn $POLICY_ARN
   done
+
+  echo "Deleting IAM role $LAMBDA_ROLE_NAME..."
+  aws iam delete-role --role-name $LAMBDA_ROLE_NAME || echo "IAM role $LAMBDA_ROLE_NAME does not exist or could not be deleted."
 fi
-echo "Deleting IAM role $LAMBDA_ROLE_NAME..."
-aws iam delete-role --role-name $LAMBDA_ROLE_NAME || echo "IAM role $LAMBDA_ROLE_NAME does not exist or could not be deleted."
 
 # Step 4: Delete the Role Stack
 delete_stack "$ROLE_STACK"

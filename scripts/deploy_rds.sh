@@ -168,7 +168,7 @@ DATABASE_ACCESS_ROLE_ARN=$(aws cloudformation describe-stacks \
 echo $DATABASE_ACCESS_ROLE_ARN
 
 echo "Creating service user lambda"
-CREATE_USER_FUNCTION_NAME "create-user"
+CREATE_USER_FUNCTION_NAME="create-user"
 zip -q -j create_user_lambda.zip ./scripts/create_user_lambda.py"
 
 aws lambda create-function \
