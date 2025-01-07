@@ -3,7 +3,7 @@
   "Region": "eu-north-1",
   "Stacks": {
     "RoleStack": "foxy-dev-role",
-    "UserPoolStack": "foxy-dev",
+    "UserPoolStack": "foxy-dev-user-pool",
     "ServiceAccountStack": "foxy-dev-service-accounts",
     "DatabaseStack": "foxy-dev-rds-stack"
   },
