@@ -139,15 +139,12 @@ aws cloudformation deploy \
   --capabilities CAPABILITY_NAMED_IAM
 
 echo "Loading schema"
-sudo yum install -y postgresql # For Amazon Linux/CloudShell
-echo "psql installed successfully."
 
 # Check if the SQL file exists
 if [[ ! -f $SQL_FILE ]]; then
   echo "Error: Schema not found!"
   exit 1
 fi
-
 
 echo "Executing SQL commands from '$SQL_FILE'..."
 PGPASSWORD=$DB_PASSWORD psql \
