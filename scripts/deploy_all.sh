@@ -28,7 +28,7 @@ SERVICE_ACCOUNT_STACK=$(jq -r '.Stacks.ServiceAccountStack // empty' $PARAMETERS
 
 # Step 1: Deploy the IAM Role stack
 echo "Deploying IAM Role stack..."
-./scripts/deploy_stack.sh $ROLE_STACK templates/cognito_lambda_role.yaml $CONFIG_FILE
+./scripts/deploy_stack.sh RoleStack templates/cognito_lambda_role.yaml $CONFIG_FILE
 if [ $? -ne 0 ]; then
   echo "Failed to deploy role stack. Exiting."
   exit 1
@@ -174,7 +174,7 @@ aws lambda add-permission \
     
     
 echo "Updating Lambda IAM role with access policy..."
-LAMBDA_RDS_ROLE_ARN=$(aws iam list-roles --query "Roles[?contains(RoleName, 'foxy-role-DatabaseAccessRole')].Arn" --output text)
+LAMBDA_RDS_ROLE_ARN=$(aws iam list-roles --query "Roles[?contains(RoleName, 'foxy-$ENVIRONMENT_NAME-role-DatabaseAccessRole')].Arn" --output text)
 aws iam attach-role-policy \
     --role-name $(basename $LAMBDA_RDS_ROLE_ARN) \
     --policy-arn arn:aws:iam::aws:policy/AmazonRDSFullAccess
