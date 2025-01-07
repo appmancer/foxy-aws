@@ -159,6 +159,15 @@ aws lambda add-permission \
     --action lambda:InvokeFunction \
     --principal cognito-idp.amazonaws.com \
     --source-arn arn:aws:cognito-idp:$REGION:$AWS_ACCOUNT_ID:userpool/$USER_POOL_ID
+    
+    
+echo "Updating Lambda IAM role with access policy..."
+LAMBDA_RDS_ROLE_ARN=$(aws iam list-roles --query "Roles[?contains(RoleName, 'foxy-lambda')].Arn" --output text)
+aws iam attach-role-policy \
+    --role-name $(basename $LAMBDA_RDS_ROLE_ARN) \
+    --policy-arn arn:aws:iam::aws:policy/AmazonRDSFullAccess
+echo "Lambda IAM role updated for RDS IAM Authentication."
+
 
 echo "Updating Cognito User Pool with triggers..."
 UPDATE_OUTPUT=$(aws cognito-idp update-user-pool \
@@ -181,7 +190,10 @@ fi
 rm -f $LAMBDA_CONFIG_FILE
 
 echo "Starting database build"
-./scripts/deploy_rds.sh $ENVIRONMENT
+./scripts/deploy_rds.sh $CONFIG_FILE
+
+echo "Created Lambda function"
+aws lambda list-functions --query "Functions[*].[FunctionName]" --output table
 
 echo "Deployment completed successfully!"
 

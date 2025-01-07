@@ -23,19 +23,54 @@ ROLE_STACK=$(jq -r '.Stacks.RoleStack' $PARAMETERS_FILE)
 USER_POOL_STACK=$(jq -r '.Stacks.UserPoolStack' $PARAMETERS_FILE)
 SERVICE_ACCOUNT_STACK=$(jq -r '.Stacks.ServiceAccountStack // empty' $PARAMETERS_FILE)
 DATABASE_STACK=$(jq -r '.Stacks.DatabaseStack // empty' $PARAMETERS_FILE)
+PREFIX="foxy"
 
-# Step 0: Delete the database
+echo "Starting cleanup for environment: $ENVIRONMENT..."
+
+# Step 1: Delete Lambda Functions
+echo "Deleting Lambda functions..."
+LAMBDA_FUNCTIONS=$(aws lambda list-functions --query "Functions[?starts_with(FunctionName, \`${PREFIX}-${ENVIRONMENT}\`)].FunctionName" --output text)
+for FUNCTION in $LAMBDA_FUNCTIONS; do
+  echo "Deleting Lambda function: $FUNCTION"
+  aws lambda delete-function --function-name $FUNCTION
+done
+
+# Step 2: Detach and Delete Policies
+echo "Detaching and deleting custom IAM policies..."
+POLICIES=$(aws iam list-policies --scope Local --query "Policies[?starts_with(PolicyName, \`${PREFIX}-${ENVIRONMENT}\`)].Arn" --output text)
+for POLICY_ARN in $POLICIES; do
+  echo "Detaching and deleting policy: $POLICY_ARN"
+  # Detach the policy from all roles
+  ROLES=$(aws iam list-entities-for-policy --policy-arn $POLICY_ARN --query "PolicyRoles[].RoleName" --output text)
+  for ROLE in $ROLES; do
+    echo "Detaching policy from role: $ROLE"
+    aws iam detach-role-policy --role-name $ROLE --policy-arn $POLICY_ARN
+  done
+  # Delete the policy
+  aws iam delete-policy --policy-arn $POLICY_ARN
+done
+
+# Step 3: Delete IAM Roles
+echo "Deleting IAM roles..."
+ROLES=$(aws iam list-roles --query "Roles[?starts_with(RoleName, \`${PREFIX}-${ENVIRONMENT}\`)].RoleName" --output text)
+for ROLE in $ROLES; do
+  echo "Deleting IAM role: $ROLE"
+  aws iam delete-role --role-name $ROLE
+done
+
+# Step 4: Delete S3 Bucket
+BUCKET_NAME="${PREFIX}-schema-deployments-${ENVIRONMENT}"
+echo "Deleting S3 bucket: $BUCKET_NAME"
+aws s3 rm s3://$BUCKET_NAME --recursive
+aws s3api delete-bucket --bucket $BUCKET_NAME --region $REGION
+
+echo "Cleanup complete for environment: $ENVIRONMENT."
+
+# Step 1: Delete the database
 if [ -n "$DATABASE_STACK" ]; then
   echo "Deleting Database stack..."
   aws cloudformation delete-stack --stack-name $DATABASE_STACK
 fi
-
-# Step 1: Delete the Lambda Function
-echo "Deleting Lambda function..."
-LAMBDA_FUNCTION_NAME="CognitoCustomAuthLambda"
-aws lambda delete-function \
-  --function-name $LAMBDA_FUNCTION_NAME \
-  --region $REGION || echo "Lambda function $LAMBDA_FUNCTION_NAME does not exist."
 
 # Step 2: Delete the Service Account Stack
 if [ -n "$SERVICE_ACCOUNT_STACK" ]; then
@@ -81,6 +116,7 @@ fi
 echo "Waiting for stacks to be deleted..."
 aws cloudformation wait stack-delete-complete --stack-name $USER_POOL_STACK || echo "User Pool stack deletion completed."
 aws cloudformation wait stack-delete-complete --stack-name $ROLE_STACK || echo "IAM Role stack deletion completed."
+
 
 echo "Environment reset completed successfully!"
 
