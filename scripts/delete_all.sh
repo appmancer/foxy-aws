@@ -29,11 +29,18 @@ echo "Starting cleanup for environment: $ENVIRONMENT..."
 
 # Step 1: Delete Lambda Functions
 echo "Deleting Lambda functions..."
-LAMBDA_FUNCTIONS=$(aws lambda list-functions --output text)
-for FUNCTION in $LAMBDA_FUNCTIONS; do
-  echo "Deleting Lambda function: $FUNCTION"
-  aws lambda delete-function --function-name $FUNCTION
-done
+
+# List functions and extract only the FunctionName field
+LAMBDA_FUNCTIONS=$(aws lambda list-functions --query "Functions[].FunctionName" --output text)
+
+if [ -z "$LAMBDA_FUNCTIONS" ]; then
+    echo "No Lambda functions found."
+else
+    for FUNCTION in $LAMBDA_FUNCTIONS; do
+        echo "Deleting Lambda function: $FUNCTION"
+        aws lambda delete-function --function-name $FUNCTION || echo "Failed to delete Lambda function: $FUNCTION"
+    done
+fi
 
 # Step 2: Detach and Delete Policies
 echo "Detaching and deleting custom IAM policies..."
