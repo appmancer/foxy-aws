@@ -43,6 +43,7 @@ delete_stack() {
     echo "Stack $stack_name exists with status $stack_status. Deleting..."
     aws cloudformation delete-stack --stack-name "$stack_name"
     echo "Stack $stack_name deletion initiated."
+    aws cloudformation wait stack-delete-complete --stack-name "$stack_name" || echo "$stack_name stack deletion completed."
   elif [ "$stack_status" == "DELETE_COMPLETE" ]; then
     echo "Stack $stack_name has already been deleted."
   elif [ "$stack_status" == "STACK_NOT_FOUND" ]; then
@@ -171,10 +172,6 @@ fi
 
 # Step 4: Delete the Role Stack
 delete_stack "$ROLE_STACK"
-
-# Wait for stacks to be deleted
-echo "Waiting for stacks to be deleted..."
-aws cloudformation wait stack-delete-complete --stack-name $USER_POOL_STACK || echo "User Pool stack deletion completed."
 
 echo "Environment reset completed successfully!"
 
