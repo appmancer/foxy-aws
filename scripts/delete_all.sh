@@ -82,7 +82,7 @@ fi
 
 # Step 3: Delete IAM Roles
 echo "Deleting IAM roles..."
-ROLES=$(aws iam list-roles --query "Roles[?starts_with(RoleName, \`${PREFIX}-${ENVIRONMENT}\`)].RoleName" --output text)
+ROLES=$(aws iam list-roles --query "Roles[?starts_with(RoleName, \`${ENVIRONMENT}\`)].RoleName" --output text)
 for ROLE in $ROLES; do
   echo "Deleting IAM role: $ROLE"
   aws iam delete-role --role-name $ROLE
