@@ -174,7 +174,7 @@ aws lambda add-permission \
     
     
 echo "Updating Lambda IAM role with access policy..."
-LAMBDA_RDS_ROLE_ARN=$(aws iam list-roles --query "Roles[?contains(RoleName, 'foxy-lambda')].Arn" --output text)
+LAMBDA_RDS_ROLE_ARN=$(aws iam list-roles --query "Roles[?contains(RoleName, 'foxy-role-DatabaseAccessRole')].Arn" --output text)
 aws iam attach-role-policy \
     --role-name $(basename $LAMBDA_RDS_ROLE_ARN) \
     --policy-arn arn:aws:iam::aws:policy/AmazonRDSFullAccess
