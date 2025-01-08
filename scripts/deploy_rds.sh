@@ -18,7 +18,7 @@ PARAMETERS_FILE=$CONFIG_FILE
 # Parse parameters
 ENVIRONMENT=$(jq -r '.Environment' $PARAMETERS_FILE)
 ENVIRONMENT_NAME=$(jq -r '.Parameters[] | select(.ParameterKey=="EnvironmentName") | .ParameterValue' "$CONFIG_FILE")
-ROLE_STACK=$(jq -r '.Stacks.RoleStack' $PARAMETERS_FILE)
+STACK_NAME=$(jq -r '.Stacks.DatabaseStack' $PARAMETERS_FILE)
 
 DB_INSTANCE_CLASS="db.t3.micro"
 ALLOCATED_STORAGE="20"
@@ -168,7 +168,6 @@ Outputs:
 EOF
 
 # Deploy the stack
-STACK_NAME="${ENVIRONMENT_NAME}-rds-stack"
 echo "Deploying CloudFormation stack: $STACK_NAME..."
 aws cloudformation deploy \
   --stack-name $STACK_NAME \
