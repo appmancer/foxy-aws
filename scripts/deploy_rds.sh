@@ -84,6 +84,31 @@ if [[ -z "$MONITORING_ROLE_ARN" ]]; then
   exit 1
 fi
 
+echo "RDSMonitoringRole ARN: $MONITORING_ROLE_ARN"
+
+# Derive the RDSMonitoringRole name
+RDS_MONITORING_ROLE_NAME=$(basename $MONITORING_ROLE_ARN)
+
+if [[ -z "$RDS_MONITORING_ROLE_NAME" ]]; then
+  echo "Error: Could not derive RDSMonitoringRole name from ARN. Exiting."
+  exit 1
+fi
+
+echo "RDSMonitoringRole Name: $RDS_MONITORING_ROLE_NAME"
+
+echo "Attaching AmazonRDSEnhancedMonitoringRole policy to the RDS Monitoring role..."
+aws iam attach-role-policy \
+    --role-name $RDS_MONITORING_ROLE_NAME \
+    --policy-arn arn:aws:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole
+
+if [ $? -ne 0 ]; then
+  echo "Failed to attach AmazonRDSEnhancedMonitoringRole policy to the role."
+  exit 1
+fi
+
+echo "Policy attached successfully."
+
+
 # Generate a CloudFormation template dynamically
 CF_TEMPLATE="rds_template_${ENVIRONMENT}.yaml"
 echo "Generating CloudFormation template: $CF_TEMPLATE..."
@@ -166,6 +191,8 @@ DATABASE_ACCESS_ROLE_ARN=$(aws iam list-roles \
   jq -r '.[] | select(contains("DatabaseAccessRole"))')
 
 echo "DATABASE_ACCESS_ROLE_ARN:$DATABASE_ACCESS_ROLE_ARN"
+
+
 
 echo "Creating service user lambda"
 CREATE_USER_FUNCTION_NAME="create-user"
