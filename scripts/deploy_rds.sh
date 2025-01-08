@@ -161,7 +161,7 @@ echo "RDS Endpoint: $DB_ENDPOINT"
 echo "RDS Port: $DB_PORT"
 
 echo "Getting the DatabaseAccessRole ARN"
-DATABASE_ROLE_ARN=$(aws iam list-roles \
+DATABASE_ACCESS_ROLE_ARN=$(aws iam list-roles \
   --query "Roles[*].Arn" --output json | \
   jq -r '.[] | select(contains("DatabaseAccessRole"))')
 
