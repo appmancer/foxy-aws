@@ -199,9 +199,17 @@ echo "Downloaded"
 echo "Creating service user lambda"
 CREATE_USER_FUNCTION_NAME="create-user"
 echo "Packing zip file..."
-zip -q -j create_user_lambda.zip ./scripts/create_user_lambda.py ./psycopg2/*
+cp ./scripts/create_user_lambda.py ./psycopg2
+cd psycopg2
+zip -r create_user_lambda.zip *
+cp create_user_lambda.zip ..
+cd ..
+
 echo "Zip file created."
 unzip -l create_user_lambda.zip
+
+rm -rf psycogp2
+echo "psycogp2 deleted."
 
 aws lambda create-function \
     --function-name $CREATE_USER_FUNCTION_NAME \
