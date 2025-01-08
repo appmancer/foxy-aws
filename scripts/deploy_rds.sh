@@ -34,7 +34,7 @@ generate_master_password() {
   openssl rand -base64 16 | tr -d '/@" ' | cut -c1-16
 }
 
-# Prompt for production vs. development settingsDB_USER
+# Prompt for production vs. development settings
 read -p "Is this a production environment? (y/n): " PRODUCTION
 
 if [[ "$PRODUCTION" == "y" || "$PRODUCTION" == "Y" ]]; then
@@ -146,7 +146,7 @@ Resources:
       StorageEncrypted: true
       MultiAZ: ${USE_MULTI_AZ}
       EnableIAMDatabaseAuthentication: ${ENABLE_IAM_AUTH}
-      PubliclyAccessible: false
+      PubliclyAccessible: true
       BackupRetentionPeriod: 7
       MonitoringInterval: 60
       MonitoringRoleArn: ${MONITORING_ROLE_ARN}
@@ -184,6 +184,14 @@ DB_RESOURCE_ID=$(aws cloudformation describe-stacks --stack-name $STACK_NAME --q
 echo "RDS Endpoint: $DB_ENDPOINT"
 echo "RDS Port: $DB_PORT"
 
+echo "Starting configuration phase"
+aws ec2 authorize-security-group-ingress \
+    --group-id sg-058a1688625fe5e80 \
+    --protocol tcp \
+    --port 5432 \
+    --cidr 10.134.64.0/20
+
+
 echo "Getting the DatabaseAccessRole ARN"
 DATABASE_ACCESS_ROLE_ARN=$(aws iam list-roles \
   --query "Roles[*].Arn" --output json | \
@@ -191,63 +199,26 @@ DATABASE_ACCESS_ROLE_ARN=$(aws iam list-roles \
 
 echo "DATABASE_ACCESS_ROLE_ARN:$DATABASE_ACCESS_ROLE_ARN"
 
-echo "Downloading psycopg2..."
-pip install psycopg2-binary -t ./psycopg2
-echo "Downloaded"
+echo "Starting configuration phase..."
+echo "Security group..."
+GROUP_ID=$(aws ec2 describe-security-groups \
+    --filters "Name=group-name,Values=default" \
+    --query "SecurityGroups[0].GroupId" \
+    --output text)
 
-echo "Creating service user lambda"
-CREATE_USER_FUNCTION_NAME="create-user"
-echo "Packing zip file..."
-cp ./scripts/create_user_lambda.py ./psycopg2
-cd psycopg2
-zip -r create_user_lambda.zip *
-cp create_user_lambda.zip ..
-cd ..
-
-echo "Zip file created."
-unzip -l create_user_lambda.zip
-
-rm -rf psycogp2
-echo "psycogp2 deleted."
-
-aws lambda create-function \
-    --function-name $CREATE_USER_FUNCTION_NAME \
-    --runtime python3.9 \
-    --role $DATABASE_ACCESS_ROLE_ARN \
-    --handler create_user_lambda.lambda_handler \
-    --timeout 15 \
-    --memory-size 128 \
-    --zip-file fileb://create_user_lambda.zip \
-    --environment "Variables={DB_HOST=$DB_ENDPOINT,DB_PORT=$DB_PORT,DB_NAME=$DB_NAME,DB_USER=$DB_USER,DB_PASSWORD=$MASTER_PASSWORD}"
-
-# Wait for the Lambda function to be in Active state
-echo "Waiting for Lambda function $CREATE_USER_FUNCTION_NAME to be ready..."
-aws lambda wait function-active --function-name $CREATE_USER_FUNCTION_NAME
-
-echo "Executing lambda to create service user"
-echo "Invoking Lambda function to create the database user..."
-aws lambda invoke \
-    --function-name $CREATE_USER_FUNCTION_NAME \
-    --log-type Tail \
-    --query 'LogResult' \
-    --output text \
-    response.json | base64 -d
-
-# Check the response for success
-if grep -q '"statusCode": 200' response.json; then
-    echo "Lambda executed successfully. Database user created."
-   
-   # Clean up temporary files
-   rm -f response.json
-   rm -f create_user_lambda.zip
-else
-    echo "Error: Lambda execution failed. Check response.json or CloudWatch logs for details."
-    exit 1
+if [[ -z "$GROUP_ID" ]]; then
+  echo "Error: Could not retrieve Security Group ID"
+  exit 1
 fi
- 
-echo "Cleaning up the temporary Lambda function..."
-aws lambda delete-function --function-name $CREATE_USER_FUNCTION_NAME
-echo "Temporary Lambda function deleted."
+
+# Add the ingress rule
+aws ec2 authorize-security-group-ingress \
+    --group-id $GROUP_ID \
+    --protocol tcp \
+    --port 5432 \
+    --cidr 10.134.64.0/20
+
+echo "Ingress rule added to Security Group: $GROUP_ID"
 
 echo "Creating the lambda to execute sql..."
 EXECUTE_SQL_FUNCTION_NAME "execute_sql"
