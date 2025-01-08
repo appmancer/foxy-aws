@@ -191,11 +191,17 @@ DATABASE_ACCESS_ROLE_ARN=$(aws iam list-roles \
 
 echo "DATABASE_ACCESS_ROLE_ARN:$DATABASE_ACCESS_ROLE_ARN"
 
-
+echo "Downloading psycopg2..."
+mkdir psycopg2
+pip install psycopg2-binary -t ./psycopg2
+echo "Downloaded"
 
 echo "Creating service user lambda"
 CREATE_USER_FUNCTION_NAME="create-user"
-zip -q -j create_user_lambda.zip ./scripts/create_user_lambda.py
+echo "Packing zip file..."
+zip -q -j create_user_lambda.zip ./scripts/create_user_lambda.py ./psycopg2/*
+echo "Zip file created."
+unzip -l create_user_lambda.zip
 
 aws lambda create-function \
     --function-name $CREATE_USER_FUNCTION_NAME \
