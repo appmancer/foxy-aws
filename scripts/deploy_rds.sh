@@ -181,6 +181,10 @@ aws lambda create-function \
     --zip-file fileb://create_user_lambda.zip \
     --environment "Variables={DB_HOST=$DB_ENDPOINT,DB_PORT=$DB_PORT,DB_NAME=$DB_NAME,DB_USER=$DB_USER,DB_PASSWORD=$MASTER_PASSWORD}"
 
+# Wait for the Lambda function to be in Active state
+echo "Waiting for Lambda function $CREATE_USER_FUNCTION_NAME to be ready..."
+aws lambda wait function-active --function-name $CREATE_USER_FUNCTION_NAME
+
 echo "Executing lambda to create service user"
 echo "Invoking Lambda function to create the database user..."
 aws lambda invoke \
