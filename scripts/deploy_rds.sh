@@ -192,7 +192,6 @@ DATABASE_ACCESS_ROLE_ARN=$(aws iam list-roles \
 echo "DATABASE_ACCESS_ROLE_ARN:$DATABASE_ACCESS_ROLE_ARN"
 
 echo "Downloading psycopg2..."
-mkdir psycopg2
 pip install psycopg2-binary -t ./psycopg2
 echo "Downloaded"
 
