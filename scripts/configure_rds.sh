@@ -76,7 +76,7 @@ aws s3api create-bucket \
     --create-bucket-configuration LocationConstraint=$REGION
 
 echo "Generating policy for bucket: $BUCKET_NAME..."
-sed "s/{{BUCKET_NAME}}/$BUCKET_NAME/g; s/{{VPC_CIDR}}/$VPC_CIDR/g" $TEMPLATE_FILE > $POLICY_FILE
+sed "s|{{BUCKET_NAME}}|$BUCKET_NAME|g; s|{{VPC_CIDR}}|$VPC_CIDR|g" $TEMPLATE_FILE > $POLICY_FILE
 echo "Applying bucket policies for $BUCKET_NAME..."
 aws s3api put-bucket-policy --bucket $BUCKET_NAME --policy file://$POLICY_FILE
 
