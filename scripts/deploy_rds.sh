@@ -185,12 +185,6 @@ echo "RDS Endpoint: $DB_ENDPOINT"
 echo "RDS Port: $DB_PORT"
 
 echo "Starting configuration phase"
-aws ec2 authorize-security-group-ingress \
-    --group-id sg-058a1688625fe5e80 \
-    --protocol tcp \
-    --port 5432 \
-    --cidr 10.134.64.0/20
-
 
 echo "Getting the DatabaseAccessRole ARN"
 DATABASE_ACCESS_ROLE_ARN=$(aws iam list-roles \
@@ -198,27 +192,6 @@ DATABASE_ACCESS_ROLE_ARN=$(aws iam list-roles \
   jq -r '.[] | select(contains("DatabaseAccessRole"))')
 
 echo "DATABASE_ACCESS_ROLE_ARN:$DATABASE_ACCESS_ROLE_ARN"
-
-echo "Starting configuration phase..."
-echo "Security group..."
-GROUP_ID=$(aws ec2 describe-security-groups \
-    --filters "Name=group-name,Values=default" \
-    --query "SecurityGroups[0].GroupId" \
-    --output text)
-
-if [[ -z "$GROUP_ID" ]]; then
-  echo "Error: Could not retrieve Security Group ID"
-  exit 1
-fi
-
-# Add the ingress rule
-aws ec2 authorize-security-group-ingress \
-    --group-id $GROUP_ID \
-    --protocol tcp \
-    --port 5432 \
-    --cidr 10.134.64.0/20
-
-echo "Ingress rule added to Security Group: $GROUP_ID"
 
 echo "Creating the lambda to execute sql..."
 EXECUTE_SQL_FUNCTION_NAME "execute_sql"
