@@ -107,6 +107,7 @@ else
   done
 fi
 
+
 # Step 3: Delete IAM Roles
 echo "Deleting IAM roles..."
 ROLES=$(aws iam list-roles --query "Roles[?starts_with(RoleName, \`${ENVIRONMENT}\`)].RoleName" --output text)
@@ -116,7 +117,9 @@ for ROLE in $ROLES; do
 done
 
 # Step 4: Delete S3 Bucket
-BUCKET_NAME="${PREFIX}-schema-deployments-${ENVIRONMENT}"
+BUCKET_NAME="rds-schema-deployments"
+BUCKET_NAME="foxy-${ENVIRONMENT_NAME}-${BUCKET_NAME}"
+BUCKET_NAME="${BUCKET_NAME,,}" # Convert to lowercase
 echo "Checking if S3 bucket exists: $BUCKET_NAME"
 
 # Check if the bucket exists
