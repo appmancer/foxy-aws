@@ -155,7 +155,7 @@ echo "$RULES" | jq -c '.[]' | while read rule; do
     PROTOCOL=$(echo "$rule" | jq -r '.IpProtocol')
     FROM_PORT=$(echo "$rule" | jq -r '.FromPort')
     TO_PORT=$(echo "$rule" | jq -r '.ToPort')
-    CIDRS=$(echo "$rule" | jq -c '.IpRanges[].CidrIp')
+    CIDRS=$(echo "$rule" | jq -r '.IpRanges[].CidrIp')
 
     # Remove each CIDR rule
     for CIDR in $CIDRS; do
