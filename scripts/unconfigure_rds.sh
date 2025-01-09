@@ -29,9 +29,10 @@ echo "Deleting SQL lambda..."
 EXECUTE_SQL_FUNCTION_NAME="execute_sql"
 aws lambda delete-function --function-name $EXECUTE_SQL_FUNCTION_NAME || echo "Failed to delete Lambda function: $EXECUTE_SQL_FUNCTION_NAME"
 
-BUCKET_PREFIX="rds-schema-deployments"
-BUCKET_NAME="${BUCKET_PREFIX}-${ENVIRONMENT}"
+BUCKET_NAME="rds-schema-deployments"
+BUCKET_NAME="foxy-${ENVIRONMENT_NAME}-${BUCKET_NAME}"
 BUCKET_NAME="${BUCKET_NAME,,}" # Convert to lowercase
+
 echo "Checking if S3 bucket exists: $BUCKET_NAME"
 
 # Check if the bucket exists

@@ -53,8 +53,8 @@ aws lambda create-function \
 echo "Lambda creation complete"
 
 echo "Creating S3 buckets"
-BUCKET_PREFIX="rds-schema-deployments"
-BUCKET_NAME="${BUCKET_PREFIX}-${ENVIRONMENT}"
+BUCKET_NAME="rds-schema-deployments"
+BUCKET_NAME="foxy-${ENVIRONMENT_NAME}-${BUCKET_NAME}"
 BUCKET_NAME="${BUCKET_NAME,,}" # Convert to lowercase
 VPC_CIDR="172.31.0.0/16"
 TEMPLATE_FILE="./templates/bucket_policy_template.json"
@@ -83,7 +83,7 @@ aws s3api put-bucket-policy --bucket $BUCKET_NAME --policy file://$POLICY_FILE
 echo "S3 bucket $BUCKET_NAME created and secured."
 
 echo "Copying schema to bucket"
-aws s3 cp ./schema.sql s3://$BUCKET_NAME/
+aws s3 cp ./templates/schema.sql s3://$BUCKET_NAME/
 echo "Schema complete"
 echo "Check for success by running:aws logs tail /aws/lambda/execute_sql --follow"
 
