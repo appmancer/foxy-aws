@@ -130,6 +130,45 @@ else
   echo "S3 bucket $BUCKET_NAME does not exist. Skipping deletion."
 fi
 
+echo "Security group..."
+GROUP_ID=$(aws ec2 describe-security-groups \
+    --filters "Name=group-name,Values=default" \
+    --query "SecurityGroups[0].GroupId" \
+    --output text)
+
+if [[ -z "$GROUP_ID" ]]; then
+  echo "Error: Could not retrieve Security Group ID"
+  exit 1
+fi
+
+echo "Fetching ingress rules for Security Group: $GROUP_ID"
+
+# Retrieve all ingress rules for the security group
+RULES=$(aws ec2 describe-security-groups \
+    --group-ids $GROUP_ID \
+    --query "SecurityGroups[0].IpPermissions" \
+    --output json)
+
+# Loop through each rule
+echo "$RULES" | jq -c '.[]' | while read rule; do
+    # Extract the required fields
+    PROTOCOL=$(echo "$rule" | jq -r '.IpProtocol')
+    FROM_PORT=$(echo "$rule" | jq -r '.FromPort')
+    TO_PORT=$(echo "$rule" | jq -r '.ToPort')
+    CIDRS=$(echo "$rule" | jq -c '.IpRanges[].CidrIp')
+
+    # Remove each CIDR rule
+    for CIDR in $CIDRS; do
+        echo "Revoking ingress rule: Protocol=$PROTOCOL, FromPort=$FROM_PORT, ToPort=$TO_PORT, CIDR=$CIDR"
+        aws ec2 revoke-security-group-ingress \
+            --group-id $GROUP_ID \
+            --protocol "$PROTOCOL" \
+            --port "$FROM_PORT" \
+            --cidr "$CIDR"
+    done
+done
+
+echo "All ingress rules removed for Security Group: $GROUP_ID"
 
 echo "Cleanup complete for environment: $ENVIRONMENT."
 
