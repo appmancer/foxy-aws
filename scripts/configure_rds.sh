@@ -19,6 +19,14 @@ PARAMETERS_FILE=$CONFIG_FILE
 ENVIRONMENT=$(jq -r '.Environment' $PARAMETERS_FILE)
 ENVIRONMENT_NAME=$(jq -r '.Parameters[] | select(.ParameterKey=="EnvironmentName") | .ParameterValue' "$CONFIG_FILE")
 STACK_NAME=$(jq -r '.Stacks.DatabaseStack' $PARAMETERS_FILE)
+REGION=$(jq -r '.Region' $PARAMETERS_FILE)
+
+validate_bucket_name() {
+    if [[ ! "$1" =~ ^[a-z0-9-]+$ || ${#1} -lt 3 || ${#1} -gt 63 || "$1" =~ ^- || "$1" =~ -$ ]]; then
+        echo "Error: Bucket name '$1' is invalid. Ensure it is all lowercase, 3-63 characters, and contains only letters, numbers, and hyphens."
+        exit 1
+    fi
+}
 
 echo "Starting configuration phase"
 
@@ -31,7 +39,7 @@ echo "DATABASE_ACCESS_ROLE_ARN:$DATABASE_ACCESS_ROLE_ARN"
 
 echo "Creating the lambda to execute sql..."
 EXECUTE_SQL_FUNCTION_NAME="execute_sql"
-zip -q -j execute_sql_lambda.zip ./scripts/execute_sql_lambda.py"
+zip -q -j execute_sql_lambda.zip ./scripts/execute_sql_lambda.py
 
 aws lambda create-function \
     --function-name $EXECUTE_SQL_FUNCTION_NAME \
@@ -47,8 +55,9 @@ echo "Lambda creation complete"
 echo "Creating S3 buckets"
 BUCKET_PREFIX="rds-schema-deployments"
 BUCKET_NAME="${BUCKET_PREFIX}-${ENVIRONMENT}"
+BUCKET_NAME="${BUCKET_NAME,,}" # Convert to lowercase
 VPC_CIDR="172.31.0.0/16"
-TEMPLATE_FILE="./templates/bucket-policy-template.json"
+TEMPLATE_FILE="./templates/bucket_policy_template.json"
 POLICY_FILE="bucket-policy.json"
 
 echo "Creating S3 bucket: $BUCKET_NAME in $REGION..."
@@ -57,6 +66,8 @@ if [[ ! -f $TEMPLATE_FILE ]]; then
   echo "Error: Template file '$TEMPLATE_FILE' not found."
   exit 1
 fi
+
+validate_bucket_name $BUCKET_NAME
 
 # Create the bucket
 aws s3api create-bucket \
