@@ -107,7 +107,6 @@ else
   done
 fi
 
-
 # Step 3: Delete IAM Roles
 echo "Deleting IAM roles..."
 ROLES=$(aws iam list-roles --query "Roles[?starts_with(RoleName, \`${ENVIRONMENT}\`)].RoleName" --output text)
@@ -129,51 +128,6 @@ if aws s3api head-bucket --bucket $BUCKET_NAME 2>/dev/null; then
 else
   echo "S3 bucket $BUCKET_NAME does not exist. Skipping deletion."
 fi
-
-echo "Security group..."
-GROUP_ID=$(aws ec2 describe-security-groups \
-    --filters "Name=group-name,Values=default" \
-    --query "SecurityGroups[0].GroupId" \
-    --output text)
-
-if [[ -z "$GROUP_ID" ]]; then
-  echo "Error: Could not retrieve Security Group ID"
-  exit 1
-fi
-
-echo "Fetching current ingress rules for Security Group: $GROUP_ID"
-
-# List current ingress rules
-aws ec2 describe-security-groups \
-    --group-ids "$GROUP_ID" \
-    --query "SecurityGroups[0].IpPermissions" \
-    --output json | jq -r '.[] | "\(.IpProtocol) \(.FromPort)-\(.ToPort) \(.IpRanges[].CidrIp)"'
-
-# Check if the rule already exists
-RULE_EXISTS=$(aws ec2 describe-security-groups \
-    --group-ids "$GROUP_ID" \
-    --query "SecurityGroups[0].IpPermissions[?IpProtocol=='$PROTOCOL' && FromPort==$PORT && ToPort==$PORT && IpRanges[?CidrIp=='$CIDR_BLOCK']] | length(@)" \
-    --output text)
-
-if [ "$RULE_EXISTS" -gt 0 ]; then
-    echo "Ingress rule already exists: Protocol=$PROTOCOL, Port=$PORT, CIDR=$CIDR_BLOCK"
-else
-    # Add the ingress rule
-    echo "Adding ingress rule: Protocol=$PROTOCOL, Port=$PORT, CIDR=$CIDR_BLOCK"
-    aws ec2 authorize-security-group-ingress \
-        --group-id "$GROUP_ID" \
-        --protocol "$PROTOCOL" \
-        --port "$PORT" \
-        --cidr "$CIDR_BLOCK"
-
-    if [ $? -eq 0 ]; then
-        echo "Ingress rule added successfully to Security Group: $GROUP_ID"
-    else
-        echo "Failed to add ingress rule to Security Group: $GROUP_ID"
-    fi
-fi
-
-echo "All ingress rules removed for Security Group: $GROUP_ID"
 
 echo "Cleanup complete for environment: $ENVIRONMENT."
 
