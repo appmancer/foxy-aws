@@ -141,32 +141,37 @@ if [[ -z "$GROUP_ID" ]]; then
   exit 1
 fi
 
-echo "Fetching ingress rules for Security Group: $GROUP_ID"
+echo "Fetching current ingress rules for Security Group: $GROUP_ID"
 
-# Retrieve all ingress rules for the security group
-RULES=$(aws ec2 describe-security-groups \
-    --group-ids $GROUP_ID \
+# List current ingress rules
+aws ec2 describe-security-groups \
+    --group-ids "$GROUP_ID" \
     --query "SecurityGroups[0].IpPermissions" \
-    --output json)
+    --output json | jq -r '.[] | "\(.IpProtocol) \(.FromPort)-\(.ToPort) \(.IpRanges[].CidrIp)"'
 
-# Loop through each rule
-echo "$RULES" | jq -c '.[]' | while read rule; do
-    # Extract the required fields
-    PROTOCOL=$(echo "$rule" | jq -r '.IpProtocol')
-    FROM_PORT=$(echo "$rule" | jq -r '.FromPort')
-    TO_PORT=$(echo "$rule" | jq -r '.ToPort')
-    CIDRS=$(echo "$rule" | jq -r '.IpRanges[].CidrIp')
+# Check if the rule already exists
+RULE_EXISTS=$(aws ec2 describe-security-groups \
+    --group-ids "$GROUP_ID" \
+    --query "SecurityGroups[0].IpPermissions[?IpProtocol=='$PROTOCOL' && FromPort==$PORT && ToPort==$PORT && IpRanges[?CidrIp=='$CIDR_BLOCK']] | length(@)" \
+    --output text)
 
-    # Remove each CIDR rule
-    for CIDR in $CIDRS; do
-        echo "Revoking ingress rule: Protocol=$PROTOCOL, FromPort=$FROM_PORT, ToPort=$TO_PORT, CIDR=$CIDR"
-        aws ec2 revoke-security-group-ingress \
-            --group-id $GROUP_ID \
-            --protocol "$PROTOCOL" \
-            --port "$FROM_PORT" \
-            --cidr "$CIDR"
-    done
-done
+if [ "$RULE_EXISTS" -gt 0 ]; then
+    echo "Ingress rule already exists: Protocol=$PROTOCOL, Port=$PORT, CIDR=$CIDR_BLOCK"
+else
+    # Add the ingress rule
+    echo "Adding ingress rule: Protocol=$PROTOCOL, Port=$PORT, CIDR=$CIDR_BLOCK"
+    aws ec2 authorize-security-group-ingress \
+        --group-id "$GROUP_ID" \
+        --protocol "$PROTOCOL" \
+        --port "$PORT" \
+        --cidr "$CIDR_BLOCK"
+
+    if [ $? -eq 0 ]; then
+        echo "Ingress rule added successfully to Security Group: $GROUP_ID"
+    else
+        echo "Failed to add ingress rule to Security Group: $GROUP_ID"
+    fi
+fi
 
 echo "All ingress rules removed for Security Group: $GROUP_ID"
 
