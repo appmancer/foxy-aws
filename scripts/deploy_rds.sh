@@ -146,7 +146,7 @@ Resources:
       StorageEncrypted: true
       MultiAZ: ${USE_MULTI_AZ}
       EnableIAMDatabaseAuthentication: ${ENABLE_IAM_AUTH}
-      PubliclyAccessible: true
+      PubliclyAccessible: false
       BackupRetentionPeriod: 7
       MonitoringInterval: 60
       MonitoringRoleArn: ${MONITORING_ROLE_ARN}
@@ -191,4 +191,4 @@ if [[ "$PRODUCTION" != "y" && "$PRODUCTION" != "Y" ]]; then
 fi
 
 #Call out to separate config script
-./scripts/configure_rds.sh $CONFIG_FILE
+./scripts/configure_dynamodb.sh $CONFIG_FILE
