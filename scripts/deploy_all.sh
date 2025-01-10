@@ -46,6 +46,18 @@ if [ -z "$ROLE_ARN" ]; then
 fi
 echo "Fetched Role ARN: $ROLE_ARN"
 
+echo "Variables for deployment:"
+echo "ROLE_EXPORT_NAME=$ROLE_EXPORT_NAME"
+echo "ENVIRONMENT_NAME=$ENVIRONMENT_NAME"
+echo "ROLE_NAME=$ROLE_NAME"
+echo "AWS_ACCOUNT_ID=$AWS_ACCOUNT_ID"
+echo "ROLE_ARN=$ROLE_ARN"
+echo "ENVIRONMENT=$ENVIRONMENT"
+echo "REGION=$REGION"
+echo "ROLE_STACK=$ROLE_STACK"
+echo "USER_POOL_STACK=$USER_POOL_STACK"
+echo "SERVICE_ACCOUNT_STACK=$SERVICE_ACCOUNT_STACK"
+
 # Step 2: Deploy the Cognito User Pool stack
 echo "Deploying Cognito User Pool stack..."
 ./scripts/deploy_stack.sh UserPoolStack templates/cognito_user_pool.yaml $CONFIG_FILE
@@ -151,7 +163,7 @@ EOF
 
 echo "Lambda configuration for Cognito Triggers:"
 cat $LAMBDA_CONFIG_FILE
-
+	
 echo "Adding resource-based access policies for Lambda triggers"
 aws lambda add-permission \
     --function-name $LAMBDA_FUNCTION_NAME \
@@ -159,6 +171,15 @@ aws lambda add-permission \
     --action lambda:InvokeFunction \
     --principal cognito-idp.amazonaws.com \
     --source-arn arn:aws:cognito-idp:$REGION:$AWS_ACCOUNT_ID:userpool/$USER_POOL_ID
+    
+    
+echo "Updating Lambda IAM role with access policy..."
+LAMBDA_RDS_ROLE_ARN=$(aws iam list-roles --query "Roles[?contains(RoleName, 'foxy-$ENVIRONMENT_NAME-role-DatabaseAccessRole')].Arn" --output text)
+aws iam attach-role-policy \
+    --role-name $(basename $LAMBDA_RDS_ROLE_ARN) \
+    --policy-arn arn:aws:iam::aws:policy/AmazonRDSFullAccess
+echo "Lambda IAM role updated for RDS IAM Authentication."
+
 
 echo "Updating Cognito User Pool with triggers..."
 UPDATE_OUTPUT=$(aws cognito-idp update-user-pool \
@@ -180,6 +201,11 @@ fi
 # Cleanup
 rm -f $LAMBDA_CONFIG_FILE
 
+echo "Starting database build"
+./scripts/deploy_rds.sh $CONFIG_FILE
+
+echo "Created Lambda function"
+aws lambda list-functions --query "Functions[*].[FunctionName]" --output table
 
 echo "Deployment completed successfully!"
 
