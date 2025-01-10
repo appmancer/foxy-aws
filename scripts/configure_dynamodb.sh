@@ -24,6 +24,7 @@ REPORTING_ROLE="foxy_${ENVIRONMENT_NAME}_ReportingRole"
 
 # AWS region (update as needed)
 AWS_REGION="eu-north-1"
+AWS_ACCOUNT_ID=971422686568
 
 # Create Event Store table
 echo "Creating Event Store table: $EVENT_STORE_TABLE..."
@@ -156,7 +157,7 @@ REPORTING_ROLE_ARN=$(aws iam create-role \
 
 aws iam attach-role-policy \
     --role-name $REPORTING_ROLE \
-    --policy-arn "arn:aws:iam::aws:policy/$REPORTING_POLICY_NAME"
+    --policy-arn "arn:aws:iam::${AWS_ACCOUNT_ID}:aws:policy/$REPORTING_POLICY_NAME"
 
 # Output configuration values
 echo "Configuration for $ENVIRONMENT_NAME environment:"
