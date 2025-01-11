@@ -4,7 +4,11 @@
   "Stacks": {
     "RoleStack": "foxy-role",
     "UserPoolStack": "foxy-dev",
-    "ServiceAccountStack": "foxy-service-accounts"
+    "ServiceAccountStack": "foxy-service-accounts",
+    "DatabaseStack": "foxy-dev-dynamodb",
+    "QueueStack": "foxy-dev-queues",
+    "CustomAuthStack": "foxy-dev-custom-auth",
+    "S3BucketStack": "foxy-dev-s3-buckets"
   },
   "Parameters": [
     {

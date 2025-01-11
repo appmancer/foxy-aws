@@ -1,0 +1,54 @@
+
+{
+  "PK": "User#123",
+  "SK": "Transaction#456",
+  "Status": "Requested",
+  "RequestID": "uuid-789",
+  "UnsignedTx": {
+    "to": "0xABCDEF1234567890ABCDEF1234567890ABCDEF12",
+    "value": "500000000000000000",
+    "gas": "21000",
+    "gasPrice": "1000000000",
+    "nonce": "0",
+    "chainId": "10"
+  },
+  "SignedTx": null,
+  "TxHash": null,
+  "Network": "Optimism",
+  "Amount": 0.5,
+  "Token": "ETH",
+  "ToAddress": "0xABCDEF1234567890ABCDEF1234567890ABCDEF12",
+  "FromAddress": "0x1234567890ABCDEF1234567890ABCDEF12345678",
+  "DeviceFingerprint": "abc123xyz789",
+  "Signature": null,
+  "Retries": 0,
+  "ExpiresAt": "2025-01-12T10:00:00Z",
+  "CreatedAt": "2025-01-10T10:00:00Z",
+  "UpdatedAt": "2025-01-10T10:00:00Z",
+  "PriorityLevel": "Normal",
+  "RequestedByIP": "192.168.1.100",
+  "UserAgent": "FoxyApp/1.0 (Android 12)",
+  "ErrorMessage": null,
+  "RequestSource": "MobileApp",
+  "GeoLocation": {
+    "Latitude": "51.5074",
+    "Longitude": "0.1278"
+  },
+  "SessionID": "session-xyz",
+  "AppVersion": "1.0.0",
+  "Metadata": {
+    "Expected Currency Amount": 20,
+    "Display Currency": "GBP",
+    "Message": "Thanks for the pizza!",
+    "From": {
+      "Name": "George Michael",
+      "UserID": 1234,
+      "Wallet": "0xABCDEF1234567890ABCDEF1234567890ABCDEF23"
+    },
+    "To": {
+      "Name": "Andrew Ridgeley",
+      "UserID": 6543,
+      "Wallet": "0xABCDEF1234567890ABCDEF1234567890ABCDEF12"
+    }
+  }
+}

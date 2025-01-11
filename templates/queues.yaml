@@ -1,0 +1,72 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  CloudFormation stack to create SQS queues and IAM roles for Foxy transaction processing.
+
+Resources:
+
+  # Dead Letter Queues
+  TransactionSigningDLQ:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: TransactionSigningDLQ
+
+  TransactionBroadcastDLQ:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: TransactionBroadcastDLQ
+
+  # Main Queues with DLQ Redrive Policy
+  TransactionSigningQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: TransactionSigningQueue
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt TransactionSigningDLQ.Arn
+        maxReceiveCount: 5
+
+  TransactionBroadcastQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: TransactionBroadcastQueue
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt TransactionBroadcastDLQ.Arn
+        maxReceiveCount: 5
+
+  # IAM Role for Lambda Functions to Access SQS
+  FoxyLambdaSQSRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: FoxyLambdaSQSRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSQSFullAccess
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+Outputs:
+
+  SigningQueueURL:
+    Description: "URL of the Transaction Signing Queue"
+    Value: !Ref TransactionSigningQueue
+
+  BroadcastQueueURL:
+    Description: "URL of the Transaction Broadcast Queue"
+    Value: !Ref TransactionBroadcastQueue
+
+  SigningDLQURL:
+    Description: "URL of the Transaction Signing DLQ"
+    Value: !Ref TransactionSigningDLQ
+
+  BroadcastDLQURL:
+    Description: "URL of the Transaction Broadcast DLQ"
+    Value: !Ref TransactionBroadcastDLQ
+
+  LambdaRoleArn:
+    Description: "ARN of the IAM Role for Lambda to access SQS"
+    Value: !GetAtt FoxyLambdaSQSRole.Arn
+

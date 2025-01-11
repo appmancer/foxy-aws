@@ -2,6 +2,59 @@
 
 set -e
 
+# Function to deploy a CloudFormation stack
+deploy_stack() {
+  local STACK_KEY=$1
+  local TEMPLATE_FILE=$2
+  local CONFIG_FILE=$3
+
+  # Extract stack name from config file
+  local STACK_NAME
+  STACK_NAME=$(jq -r ".Stacks[\"$STACK_KEY\"]" "$CONFIG_FILE")
+
+  if [ -z "$STACK_NAME" ] || [ "$STACK_NAME" == "null" ]; then
+    echo "Error: Stack key '$STACK_KEY' not found in config file."
+    return 1
+  fi
+
+  if [ -z "$TEMPLATE_FILE" ] || [ "$TEMPLATE_FILE" == "null" ]; then
+    echo "Error: Template not provided"
+    return 1
+  fi
+  
+  # Build parameters from config file
+  local PARAMETERS
+  PARAMETERS=$(jq -r '.Parameters[] | "\(.ParameterKey)=\(.ParameterValue)"' "$CONFIG_FILE")
+
+  # Append Role ARN if provided
+  if [ -n "$ROLE_ARN" ]; then
+    PARAMETERS="$PARAMETERS RoleArn=$ROLE_ARN"
+  fi
+
+  echo "Deploying stack '$STACK_NAME' with template '$TEMPLATE_FILE' and parameters: $PARAMETERS"
+
+  # Deploy CloudFormation stack
+  aws cloudformation deploy \
+    --stack-name "$STACK_NAME" \
+    --template-file "$TEMPLATE_FILE" \
+    --parameter-overrides $PARAMETERS \
+    --capabilities CAPABILITY_NAMED_IAM
+
+  # Report the outputs to the console
+  aws cloudformation describe-stacks \
+  --stack-name $STACK_NAME \
+  --query "Stacks[0].Outputs[*].[OutputKey, OutputValue]" \
+  --output table
+
+  # Check deployment success
+  if [ $? -eq 0 ]; then
+    echo "Successfully deployed stack '$STACK_NAME'."
+  else
+    echo "Failed to deploy stack '$STACK_NAME'."
+    return 1
+  fi
+}
+
 # Check if configuration file is provided as a parameter
 if [ "$#" -ne 1 ]; then
   echo "Usage: $0 <config-file>"
@@ -25,6 +78,7 @@ REGION=$(jq -r '.Region' $PARAMETERS_FILE)
 ROLE_STACK=$(jq -r '.Stacks.RoleStack' $PARAMETERS_FILE)
 USER_POOL_STACK=$(jq -r '.Stacks.UserPoolStack' $PARAMETERS_FILE)
 SERVICE_ACCOUNT_STACK=$(jq -r '.Stacks.ServiceAccountStack // empty' $PARAMETERS_FILE)
+CUSTOM_AUTH_STACK=$(jq -r '.Stacks.CustomAuthStack // empty' $PARAMETERS_FILE)
 
 # Step 1: Deploy the IAM Role stack
 echo "Deploying IAM Role stack..."
@@ -48,12 +102,22 @@ echo "Fetched Role ARN: $ROLE_ARN"
 
 # Step 2: Deploy the Cognito User Pool stack
 echo "Deploying Cognito User Pool stack..."
-./scripts/deploy_stack.sh UserPoolStack templates/cognito_user_pool.yaml $CONFIG_FILE
+deploy_stack UserPoolStack templates/cognito_user_pool.yaml $CONFIG_FILE
 
 # Step 3: Deploy the Service Accounts stack
 echo "Deploying Service Accounts..."
 if [ -n "$SERVICE_ACCOUNT_STACK" ]; then
-  ./scripts/deploy_stack.sh ServiceAccountStack templates/create_service_accounts.yaml $CONFIG_FILE $ROLE_ARN
+  deploy_stack ServiceAccountStack templates/create_service_accounts.yaml $CONFIG_FILE $ROLE_ARN
+  
+  # Fetch access keys for the CognitoServiceAccount
+  if [ "$STACK_KEY" == "ServiceAccountStack" ]; then
+    COGNITO_USER=$(jq -r '.Parameters[] | select(.ParameterKey=="EnvironmentName") | .ParameterValue' "$CONFIG_FILE")-CognitoServiceAccount
+    echo "Fetching access keys for CognitoServiceAccount: $COGNITO_USER"
+
+    ACCESS_KEYS=$(aws iam create-access-key --user-name "$COGNITO_USER")
+    ACCESS_KEY_ID=$(echo "$ACCESS_KEYS" | jq -r '.AccessKey.AccessKeyId')
+    SECRET_ACCESS_KEY=$(echo "$ACCESS_KEYS" | jq -r '.AccessKey.SecretAccessKey')
+  fi
 
   SERVICE_ACCOUNT_ARN="arn:aws:iam::971422686568:user/${ENVIRONMENT_NAME}-CognitoServiceAccount"
 
@@ -80,9 +144,6 @@ if [ -n "$SERVICE_ACCOUNT_STACK" ]; then
 }
 EOL
 
-  echo "Generated dynamic trust-policy.json:"
-  cat trust-policy.json
-
   # Update the trust policy
   echo "Updating trust policy for CognitoLambdaExecutionRole..."
   aws iam update-assume-role-policy \
@@ -101,85 +162,42 @@ else
   echo "No Service Account stack defined. Skipping deployment."
 fi
 
+# Step n: Deploy S3 Buckets
+echo "Deploying S3 Buckets..."
+deploy_stack S3BucketStack templates/s3_buckets.yaml $CONFIG_FILE
+echo "Complete."
+
 # Step 4: Deploy Lambda Function
 echo "Deploying Lambda function..."
+# Define variables
+BUCKET_NAME="foxy-${ENVIRONMENT_NAME}-lambda-deployments"
+ZIP_FILE="function.zip"
+S3_KEY="lambda/${ZIP_FILE}"
+
 LAMBDA_FUNCTION_NAME="CognitoCustomAuthLambda"
-zip -q -j function.zip ./scripts/custom_auth_lambda.py
+zip -q -j $ZIP_FILE ./scripts/custom_auth_lambda.py
 
-LAMBDA_ROLE_ARN=$(aws cloudformation describe-stacks \
-  --stack-name $ROLE_STACK \
-  --query "Stacks[0].Outputs[?OutputKey=='RoleArn'].OutputValue" \
-  --output text)
+# Upload function.zip to S3
+aws s3 cp $ZIP_FILE s3://$BUCKET_NAME/$S3_KEY --region $REGION
 
-LAMBDA_ARN=$(aws lambda create-function \
-  --function-name $LAMBDA_FUNCTION_NAME \
-  --runtime python3.9 \
-  --role $LAMBDA_ROLE_ARN \
-  --handler custom_auth_lambda.lambda_handler \
-  --zip-file fileb://function.zip \
-  --region $REGION \
-  --query "FunctionArn" \
-  --output text 2>/dev/null || \
-  aws lambda update-function-code \
-    --function-name $LAMBDA_FUNCTION_NAME \
-    --zip-file fileb://function.zip \
-    --region $REGION \
-    --query "FunctionArn" \
-    --output text)
+echo "Uploaded $ZIP_FILE to s3://$BUCKET_NAME/$S3_KEY"
 
-echo "Lambda Function ARN: $LAMBDA_ARN"
+deploy_stack ServiceAccountStack templates/create_service_accounts.yaml $CONFIG_FILE
 
-echo "Configuring Cognito User Pool triggers..."
-USER_POOL_ID=$(aws cloudformation describe-stacks \
-  --stack-name $USER_POOL_STACK \
-  --query "Stacks[0].Outputs[?OutputKey=='UserPoolId'].OutputValue" \
-  --output text)
+# Step 5: Deploy DynamoDB Database
+echo "Deploying database..."
+deploy_stack DatabaseStack templates/database.yaml $CONFIG_FILE
+echo "Complete."
 
-if [ -z "$USER_POOL_ID" ]; then
-  echo "Error: Could not fetch User Pool ID. Exiting."
-  exit 1
-fi
-
-LAMBDA_CONFIG_FILE="lambda-config.json"
-cat <<EOF > $LAMBDA_CONFIG_FILE
-{
-    "DefineAuthChallenge": "$LAMBDA_ARN",
-    "CreateAuthChallenge": "$LAMBDA_ARN",
-    "VerifyAuthChallengeResponse": "$LAMBDA_ARN"
-}
-EOF
-
-echo "Lambda configuration for Cognito Triggers:"
-cat $LAMBDA_CONFIG_FILE
-
-echo "Adding resource-based access policies for Lambda triggers"
-aws lambda add-permission \
-    --function-name $LAMBDA_FUNCTION_NAME \
-    --statement-id CognitoInvokePermission \
-    --action lambda:InvokeFunction \
-    --principal cognito-idp.amazonaws.com \
-    --source-arn arn:aws:cognito-idp:$REGION:$AWS_ACCOUNT_ID:userpool/$USER_POOL_ID
-
-echo "Updating Cognito User Pool with triggers..."
-UPDATE_OUTPUT=$(aws cognito-idp update-user-pool \
-  --user-pool-id $USER_POOL_ID \
-  --lambda-config file://$LAMBDA_CONFIG_FILE \
-  --region $REGION 2>&1)
-
-if [ $? -ne 0 ]; then
-  echo "Error: Failed to update User Pool triggers."
-  echo "AWS CLI Output:"
-  echo "$UPDATE_OUTPUT"
-  exit 1
-else
-  echo "Successfully updated User Pool triggers."
-  echo "AWS CLI Output:"
-  echo "$UPDATE_OUTPUT"
-fi
+# Step 6: Deploying Queues
+echo "Deploying queues..."
+deploy_stack QueueStack templates/queues.yaml $CONFIG_FILE
+echo "Complete."
 
 # Cleanup
 rm -f $LAMBDA_CONFIG_FILE
 
-
+echo "Access Key ID: $ACCESS_KEY_ID"
+echo "Secret Access Key: $SECRET_ACCESS_KEY"
 echo "Deployment completed successfully!"
 

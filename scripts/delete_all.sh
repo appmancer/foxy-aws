@@ -22,6 +22,8 @@ REGION=$(jq -r '.Region' $PARAMETERS_FILE)
 ROLE_STACK=$(jq -r '.Stacks.RoleStack' $PARAMETERS_FILE)
 USER_POOL_STACK=$(jq -r '.Stacks.UserPoolStack' $PARAMETERS_FILE)
 SERVICE_ACCOUNT_STACK=$(jq -r '.Stacks.ServiceAccountStack // empty' $PARAMETERS_FILE)
+DATABASE_STACK=$(jq -r '.Stacks.DatabaseStack' $PARAMETERS_FILE)
+QUEUE_STACK=$(jq -r '.Stacks.QueueStack' $PARAMETERS_FILE)
 
 # Step 1: Delete the Lambda Function
 echo "Deleting Lambda function..."
@@ -74,6 +76,8 @@ fi
 echo "Waiting for stacks to be deleted..."
 aws cloudformation wait stack-delete-complete --stack-name $USER_POOL_STACK || echo "User Pool stack deletion completed."
 aws cloudformation wait stack-delete-complete --stack-name $ROLE_STACK || echo "IAM Role stack deletion completed."
+aws cloudformation wait stack-delete-complete --stack-name $DATABASE_STACK || echo "Database stack deletion completed."
+aws cloudformation wait stack-delete-complete --stack-name $QUEUE_STACK || echo "Queue stack deletion completed."
 
 echo "Environment reset completed successfully!"
 
