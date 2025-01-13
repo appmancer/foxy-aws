@@ -26,7 +26,7 @@ Resources:
       MemorySize: 128
       Code:
         S3Bucket: !Sub "foxy-${EnvironmentName}-lambda-deployments-${AWS::AccountId}"
-        S3Key: custom_auth_lambda.zip
+        S3Key: lambda/function.zip
       Environment:
         Variables:
           ENVIRONMENT_NAME: !Ref EnvironmentName
