@@ -59,7 +59,6 @@ fi
 
 # Step 4: Detach Policies and Delete the Lambda Execution Role]
 echo "Detaching policies and deleting Lambda execution role..."
-echo "Detaching policies and deleting Lambda execution role..."
 
 # Check if the Role Stack exists
 if aws cloudformation describe-stacks --stack-name "$ROLE_STACK" --region "$REGION" > /dev/null 2>&1; then
