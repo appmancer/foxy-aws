@@ -42,13 +42,12 @@ Resources:
 
   # Update Cognito User Pool Triggers
   CognitoUserPoolLambdaConfig:
-    Type: AWS::Cognito::UserPool
+    Type: AWS::Cognito::UserPoolLambdaConfig
     Properties:
       UserPoolId: !Ref UserPoolId
-      LambdaConfig:
-        DefineAuthChallenge: !GetAtt CognitoCustomAuthLambda.Arn
-        CreateAuthChallenge: !GetAtt CognitoCustomAuthLambda.Arn
-        VerifyAuthChallengeResponse: !GetAtt CognitoCustomAuthLambda.Arn
+      CreateAuthChallenge: !GetAtt CognitoCustomAuthLambda.Arn
+      DefineAuthChallenge: !GetAtt CognitoCustomAuthLambda.Arn
+      VerifyAuthChallengeResponse: !GetAtt CognitoCustomAuthLambda.Arn
 
 Outputs:
 
