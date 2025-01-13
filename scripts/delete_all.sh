@@ -59,6 +59,7 @@ fi
 
 # Step 4: Detach Policies and Delete the Lambda Execution Role]
 echo "Detaching policies and deleting Lambda execution role..."
+echo "Detaching policies and deleting Lambda execution role..."
 
 # Check if the Role Stack exists
 if aws cloudformation describe-stacks --stack-name "$ROLE_STACK" --region "$REGION" > /dev/null 2>&1; then
@@ -71,17 +72,30 @@ if aws cloudformation describe-stacks --stack-name "$ROLE_STACK" --region "$REGI
   if [ -n "$LAMBDA_ROLE_NAME" ]; then
     # Check if the IAM Role actually exists
     if aws iam get-role --role-name "$LAMBDA_ROLE_NAME" > /dev/null 2>&1; then
+
+      # 1. Detach Managed Policies
       ATTACHED_POLICIES=$(aws iam list-attached-role-policies \
         --role-name "$LAMBDA_ROLE_NAME" \
         --query "AttachedPolicies[].PolicyArn" \
         --output text)
 
       for POLICY_ARN in $ATTACHED_POLICIES; do
-        echo "Detaching policy $POLICY_ARN from role $LAMBDA_ROLE_NAME..."
+        echo "Detaching managed policy $POLICY_ARN from role $LAMBDA_ROLE_NAME..."
         aws iam detach-role-policy --role-name "$LAMBDA_ROLE_NAME" --policy-arn "$POLICY_ARN"
       done
 
-      # Delete the IAM Role
+      # 2. Delete Inline Policies
+      INLINE_POLICIES=$(aws iam list-role-policies \
+        --role-name "$LAMBDA_ROLE_NAME" \
+        --query "PolicyNames[]" \
+        --output text)
+
+      for POLICY_NAME in $INLINE_POLICIES; do
+        echo "Deleting inline policy $POLICY_NAME from role $LAMBDA_ROLE_NAME..."
+        aws iam delete-role-policy --role-name "$LAMBDA_ROLE_NAME" --policy-name "$POLICY_NAME"
+      done
+
+      # 3. Delete the IAM Role
       aws iam delete-role --role-name "$LAMBDA_ROLE_NAME"
       echo "IAM role $LAMBDA_ROLE_NAME deleted successfully."
     else
@@ -93,6 +107,7 @@ if aws cloudformation describe-stacks --stack-name "$ROLE_STACK" --region "$REGI
 else
   echo "Role stack $ROLE_STACK does not exist. Skipping role deletion."
 fi
+
 
 # Step 5: Delete the remaining stacks
 echo "Deleting IAM Role stack..."
