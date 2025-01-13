@@ -111,15 +111,12 @@ if [ -n "$SERVICE_ACCOUNT_STACK" ]; then
   deploy_stack ServiceAccountStack templates/create_service_accounts.yaml $CONFIG_FILE $ROLE_ARN
   
   # Fetch access keys for the CognitoServiceAccount
-  if [ "$STACK_KEY" == "ServiceAccountStack" ]; then
-    COGNITO_USER=$(jq -r '.Parameters[] | select(.ParameterKey=="EnvironmentName") | .ParameterValue' "$CONFIG_FILE")-CognitoServiceAccount
-    echo "Fetching access keys for CognitoServiceAccount: $COGNITO_USER"
-
-    ACCESS_KEYS=$(aws iam create-access-key --user-name "$COGNITO_USER")
-    ACCESS_KEY_ID=$(echo "$ACCESS_KEYS" | jq -r '.AccessKey.AccessKeyId')
-    SECRET_ACCESS_KEY=$(echo "$ACCESS_KEYS" | jq -r '.AccessKey.SecretAccessKey')
-  fi
-
+  COGNITO_USER=$(jq -r '.Parameters[] | select(.ParameterKey=="EnvironmentName") | .ParameterValue' "$CONFIG_FILE")-CognitoServiceAccount
+  echo "Fetching access keys for CognitoServiceAccount: $COGNITO_USER"
+  ACCESS_KEYS=$(aws iam create-access-key --user-name "$COGNITO_USER")
+  echo $ACCESS_KEYS
+  ACCESS_KEY_ID=$(echo "$ACCESS_KEYS" | jq -r '.AccessKey.AccessKeyId')
+  SECRET_ACCESS_KEY=$(echo "$ACCESS_KEYS" | jq -r '.AccessKey.SecretAccessKey')
   SERVICE_ACCOUNT_ARN="arn:aws:iam::971422686568:user/${ENVIRONMENT_NAME}-CognitoServiceAccount"
 
   # Generate trust-policy.json dynamically
