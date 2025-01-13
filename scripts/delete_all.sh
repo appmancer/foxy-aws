@@ -111,26 +111,39 @@ fi
 
 
 # Step 5: Delete the remaining stacks
+# Wait for stacks to be deleted
+echo "Waiting for stacks to be deleted..."
 echo "Deleting IAM Role stack..."
 if [ -n "$ROLE_STACK" ]; then
   delete_stack $ROLE_STACK
 fi
 
-# Wait for stacks to be deleted
-echo "Waiting for stacks to be deleted..."
+# Remove the database roles safely
 ROLE_NAMES=("foxy_dev_AppRole" "foxy_dev_AdminRole" "foxy_dev_ReportingRole")
 
 for ROLE in "${ROLE_NAMES[@]}"; do
-  # Detach all managed policies
-  POLICIES=$(aws iam list-attached-role-policies \
-    --role-name "$ROLE" \
-    --query "AttachedPolicies[].PolicyArn" \
-    --output text)
-  
-  for POLICY_ARN in $POLICIES; do
-    echo "Detaching policy $POLICY_ARN from role $ROLE..."
-    aws iam detach-role-policy --role-name "$ROLE" --policy-arn "$POLICY_ARN"
-  done
+  # Check if the role exists
+  if aws iam get-role --role-name "$ROLE" > /dev/null 2>&1; then
+    echo "Role $ROLE exists. Detaching policies..."
+
+    # Detach all managed policies
+    POLICIES=$(aws iam list-attached-role-policies \
+      --role-name "$ROLE" \
+      --query "AttachedPolicies[].PolicyArn" \
+      --output text)
+
+    for POLICY_ARN in $POLICIES; do
+      echo "Detaching policy $POLICY_ARN from role $ROLE..."
+      aws iam detach-role-policy --role-name "$ROLE" --policy-arn "$POLICY_ARN"
+    done
+
+    # Delete the IAM role after detaching policies
+    aws iam delete-role --role-name "$ROLE"
+    echo "Role $ROLE deleted successfully."
+
+  else
+    echo "Role $ROLE does not exist. Skipping..."
+  fi
 done
 
 if [ -n "$DATABASE_STACK" ]; then
