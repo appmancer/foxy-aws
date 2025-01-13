@@ -31,6 +31,7 @@ fi
 # Parse parameters
 ENVIRONMENT=$(jq -r '.Environment' $PARAMETERS_FILE)
 REGION=$(jq -r '.Region' $PARAMETERS_FILE)
+ACCOUNT=$(jq -r '.Account' $PARAMETERS_FILE)
 ROLE_STACK=$(jq -r '.Stacks.RoleStack' $PARAMETERS_FILE)
 USER_POOL_STACK=$(jq -r '.Stacks.UserPoolStack' $PARAMETERS_FILE)
 SERVICE_ACCOUNT_STACK=$(jq -r '.Stacks.ServiceAccountStack // empty' $PARAMETERS_FILE)
@@ -123,6 +124,10 @@ fi
 if [ -n "$QUEUE_STACK" ]; then
   delete_stack $QUEUE_STACK
 fi
+
+# empty the bucket first
+aws s3 rm s3://dev-lambda-deployments-$ACCOUNT --recursive
+
 if [ -n "$BUCKET_STACK" ]; then
   delete_stack $BUCKET_STACK
 fi

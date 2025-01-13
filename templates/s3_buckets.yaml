@@ -10,7 +10,8 @@ Resources:
   LambdaDeploymentBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub "${EnvironmentName}-lambda-deployments"
+      BucketName: !Sub "${EnvironmentName}-lambda-deployments-${AWS::AccountId}"
       VersioningConfiguration:
         Status: Enabled
+    DeletionPolicy: Delete
 
