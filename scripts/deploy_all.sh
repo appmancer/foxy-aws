@@ -174,7 +174,7 @@ BUCKET_NAME="foxy-${ENVIRONMENT_NAME}-lambda-deployments"
 ZIP_FILE="function.zip"
 S3_KEY="lambda/${ZIP_FILE}"
 
-LAMBDA_FUNCTION_NAME="CognitoCustomAuthLambda"
+LAMBDA_FUNCTION_NAME="foxy-${ENVIRONMENT_NAME}-CognitoCustomAuthLambda"
 zip -q -j $ZIP_FILE ./scripts/custom_auth_lambda.py
 
 # Upload function.zip to S3
