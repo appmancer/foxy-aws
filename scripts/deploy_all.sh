@@ -30,7 +30,11 @@ deploy_stack() {
   if [ -n "$ROLE_ARN" ]; then
     PARAMETERS="$PARAMETERS RoleArn=$ROLE_ARN"
   fi
-
+  
+  if [ -n "$USER_POOL_ID" ]; then
+    PARAMETERS="$PARAMETERS UserPoolID=$USER_POOL_ID"
+  fi
+  
   echo "Deploying stack '$STACK_NAME' with template '$TEMPLATE_FILE' and parameters: $PARAMETERS"
 
   # Deploy CloudFormation stack
@@ -104,6 +108,11 @@ echo "Fetched Role ARN: $ROLE_ARN"
 # Step 2: Deploy the Cognito User Pool stack
 echo "Deploying Cognito User Pool stack..."
 deploy_stack UserPoolStack templates/cognito_user_pool.yaml $CONFIG_FILE
+USER_POOL_ID=$(aws cloudformation describe-stacks \
+  --stack-name $USER_POOL_STACK \
+  --query "Stacks[0].Outputs[?OutputKey=='UserPoolId'].OutputValue" \
+  --output text \
+  --region $REGION)
 
 # Step 3: Deploy the Service Accounts stack
 echo "Deploying Service Accounts..."

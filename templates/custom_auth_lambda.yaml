@@ -5,7 +5,7 @@ Parameters:
   EnvironmentName:
     Type: String
     Description: The name of the environment (e.g., dev, staging, prod)
-  LambdaRoleArn:
+  RoleArn:
     Type: String
     Description: ARN of the IAM role for Lambda execution.
   UserPoolId:
