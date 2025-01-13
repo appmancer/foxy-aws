@@ -32,7 +32,7 @@ deploy_stack() {
   fi
   
   if [ -n "$USER_POOL_ID" ]; then
-    PARAMETERS="$PARAMETERS UserPoolID=$USER_POOL_ID"
+    PARAMETERS="$PARAMETERS UserPoolId=$USER_POOL_ID"
   fi
   
   echo "Deploying stack '$STACK_NAME' with template '$TEMPLATE_FILE' and parameters: $PARAMETERS"
@@ -43,6 +43,7 @@ deploy_stack() {
     --template-file "$TEMPLATE_FILE" \
     --parameter-overrides $PARAMETERS \
     --capabilities CAPABILITY_NAMED_IAM
+    --region eu-north-1
 
   # Report the outputs to the console
   aws cloudformation describe-stacks \

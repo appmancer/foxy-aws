@@ -20,12 +20,12 @@ Resources:
     Properties:
       FunctionName: !Sub "${EnvironmentName}-CognitoCustomAuthLambda"
       Handler: custom_auth_lambda.lambda_handler
-      Role: !Ref LambdaRoleArn
+      Role: !Ref RoleArn
       Runtime: python3.9
       Timeout: 10
       MemorySize: 128
       Code:
-        S3Bucket: !Sub "${EnvironmentName}-lambda-deployments"
+        S3Bucket: !Sub "foxy-${EnvironmentName}-lambda-deployments-${AWS::AccountId}"
         S3Key: custom_auth_lambda.zip
       Environment:
         Variables:
