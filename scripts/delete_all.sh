@@ -43,9 +43,16 @@ BUCKET_STACK=$(jq -r '.Stacks.S3BucketStack' $PARAMETERS_FILE)
 
 # Step 1: Delete the Lambda Function
 echo "Removing triggers..."
-aws cognito-idp update-user-pool \
-  --user-pool-id eu-north-1_U44efVSs5 \
-  --lambda-config '{}'
+
+if aws cognito-idp describe-user-pool --user-pool-id "$USER_POOL_ID" --region eu-north-1 > /dev/null 2>&1; then
+  echo "User Pool exists. Updating Lambda triggers..."
+  aws cognito-idp update-user-pool \
+    --user-pool-id "$USER_POOL_ID" \
+    --lambda-config "{}"
+else
+  echo "❌ User Pool $USER_POOL_ID does not exist. Skipping update."
+fi
+
 echo "Removed"
 echo "Deleting Lambda function..."
 LAMBDA_FUNCTION_NAME="foxy-${ENVIRONMENT_NAME}-CognitoCustomAuthLambda"
