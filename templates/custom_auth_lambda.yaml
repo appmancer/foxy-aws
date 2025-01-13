@@ -18,7 +18,7 @@ Resources:
   CognitoCustomAuthLambda:
     Type: AWS::Lambda::Function
     Properties:
-      FunctionName: !Sub "${EnvironmentName}-CognitoCustomAuthLambda"
+      FunctionName: !Sub "$foxy-{EnvironmentName}-CognitoCustomAuthLambda"
       Handler: custom_auth_lambda.lambda_handler
       Role: !Ref RoleArn
       Runtime: python3.9
