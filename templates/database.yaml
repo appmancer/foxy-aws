@@ -80,7 +80,7 @@ Resources:
                 Resource:
                   - !GetAtt TransactionEventLogTable.Arn
                   - !GetAtt TransactionStateViewTable.Arn
-  DeletionPolicy: Delete
+    DeletionPolicy: Delete
 
   # IAM Role for Admin
   AdminRole:
@@ -96,7 +96,7 @@ Resources:
             Action: sts:AssumeRole
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
-  DeletionPolicy: Delete
+    DeletionPolicy: Delete
 
   # IAM Role for Reporting
   ReportingRole:
@@ -119,7 +119,7 @@ Resources:
                 Action:
                   - dynamodb:Query
                 Resource: !GetAtt TransactionStateViewTable.Arn
-  DeletionPolicy: Delete
+    DeletionPolicy: Delete
 
 Outputs:
 
