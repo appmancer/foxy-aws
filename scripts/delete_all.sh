@@ -127,7 +127,15 @@ if [ -n "$QUEUE_STACK" ]; then
 fi
 
 # empty the bucket first
-aws s3 rm s3://dev-lambda-deployments-$ACCOUNT --recursive
+BUCKET_NAME="dev-lambda-deployments-$ACCOUNT"
+
+# Check if the bucket exists
+if aws s3api head-bucket --bucket "$BUCKET_NAME" 2>/dev/null; then
+  echo "Bucket $BUCKET_NAME exists. Emptying it..."
+  aws s3 rm "s3://$BUCKET_NAME" --recursive
+else
+  echo "Bucket $BUCKET_NAME does not exist. Skipping deletion."
+fi
 
 if [ -n "$BUCKET_STACK" ]; then
   delete_stack $BUCKET_STACK
