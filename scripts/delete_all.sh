@@ -118,6 +118,20 @@ fi
 
 # Wait for stacks to be deleted
 echo "Waiting for stacks to be deleted..."
+ROLE_NAMES=("foxy_dev_AppRole" "foxy_dev_AdminRole" "foxy_dev_ReportingRole")
+
+for ROLE in "${ROLE_NAMES[@]}"; do
+  # Detach all managed policies
+  POLICIES=$(aws iam list-attached-role-policies \
+    --role-name "$ROLE" \
+    --query "AttachedPolicies[].PolicyArn" \
+    --output text)
+  
+  for POLICY_ARN in $POLICIES; do
+    echo "Detaching policy $POLICY_ARN from role $ROLE..."
+    aws iam detach-role-policy --role-name "$ROLE" --policy-arn "$POLICY_ARN"
+  done
+done
 
 if [ -n "$DATABASE_STACK" ]; then
   delete_stack $DATABASE_STACK

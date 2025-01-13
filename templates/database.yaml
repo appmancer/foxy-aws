@@ -59,7 +59,7 @@ Resources:
   AppRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub "foxy_${EnvironmentName}_AppRole"
+      RoleName: !Sub "foxy_${EnvironmentName}_AppRole-${AWS::StackName}"
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -80,12 +80,13 @@ Resources:
                 Resource:
                   - !GetAtt TransactionEventLogTable.Arn
                   - !GetAtt TransactionStateViewTable.Arn
+  DeletionPolicy: Delete
 
   # IAM Role for Admin
   AdminRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub "foxy_${EnvironmentName}_AdminRole"
+      RoleName: !Sub "foxy-${EnvironmentName}-AdminRole-${AWS::StackName}"
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -95,12 +96,13 @@ Resources:
             Action: sts:AssumeRole
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
+  DeletionPolicy: Delete
 
   # IAM Role for Reporting
   ReportingRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub "foxy_${EnvironmentName}_ReportingRole"
+      RoleName: !Sub "foxy_${EnvironmentName}_ReportingRole-${AWS::StackName}"
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -117,6 +119,7 @@ Resources:
                 Action:
                   - dynamodb:Query
                 Resource: !GetAtt TransactionStateViewTable.Arn
+  DeletionPolicy: Delete
 
 Outputs:
 
