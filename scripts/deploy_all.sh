@@ -204,12 +204,11 @@ deploy_stack CustomAuthStack templates/custom_auth_lambda.yaml $CONFIG_FILE
 
 aws cognito-idp update-user-pool \
   --user-pool-id eu-north-1_U44efVSs5 \
-  --lambda-config '{
-    "CreateAuthChallenge": "arn:aws:lambda:eu-north-1:971422686568:function:foxy-${ENVIRONMENT_NAME}-CognitoCustomAuthLambda",
-    "DefineAuthChallenge": "arn:aws:lambda:eu-north-1:971422686568:function:foxy-${ENVIRONMENT_NAME}-CognitoCustomAuthLambda",
-    "VerifyAuthChallengeResponse": "arn:aws:lambda:eu-north-1:971422686568:function:foxy-${ENVIRONMENT_NAME}-CognitoCustomAuthLambda"
-  }'
-
+  --lambda-config "{
+    \"CreateAuthChallenge\": \"arn:aws:lambda:eu-north-1:971422686568:function:foxy-${ENVIRONMENT_NAME}-CognitoCustomAuthLambda\",
+    \"DefineAuthChallenge\": \"arn:aws:lambda:eu-north-1:971422686568:function:foxy-${ENVIRONMENT_NAME}-CognitoCustomAuthLambda\",
+    \"VerifyAuthChallengeResponse\": \"arn:aws:lambda:eu-north-1:971422686568:function:foxy-${ENVIRONMENT_NAME}-CognitoCustomAuthLambda\"
+  }"
 
 rm -f $ZIP_FILE
 echo "Cleaned up local $ZIP_FILE"
