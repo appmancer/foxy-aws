@@ -30,7 +30,7 @@ fi
 
 # Parse parameters
 ENVIRONMENT=$(jq -r '.Environment' $PARAMETERS_FILE)
-ENVIRONMENT_NAME=$(jq -r '.Parameters[] | select(.ParameterKey=="EnvironmentName") | .ParameterValue' "$CONFIG_FILE")
+ENVIRONMENT_NAME=$(jq -r '.Parameters[] | select(.ParameterKey=="EnvironmentName") | .ParameterValue' "$PARAMETERS_FILE")
 REGION=$(jq -r '.Region' $PARAMETERS_FILE)
 ACCOUNT=$(jq -r '.Account' $PARAMETERS_FILE)
 ROLE_STACK=$(jq -r '.Stacks.RoleStack' $PARAMETERS_FILE)
