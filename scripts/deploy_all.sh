@@ -75,6 +75,7 @@ PARAMETERS_FILE=$CONFIG_FILE
 # Parse parameters
 ENVIRONMENT=$(jq -r '.Environment' $PARAMETERS_FILE)
 REGION=$(jq -r '.Region' $PARAMETERS_FILE)
+ACCOUNT=$(jq -r '.Account' $PARAMETERS_FILE)
 ROLE_STACK=$(jq -r '.Stacks.RoleStack' $PARAMETERS_FILE)
 USER_POOL_STACK=$(jq -r '.Stacks.UserPoolStack' $PARAMETERS_FILE)
 SERVICE_ACCOUNT_STACK=$(jq -r '.Stacks.ServiceAccountStack // empty' $PARAMETERS_FILE)
@@ -170,7 +171,7 @@ echo "Complete."
 # Step 4: Deploy Lambda Function
 echo "Deploying Lambda function..."
 # Define variables
-BUCKET_NAME="foxy-${ENVIRONMENT_NAME}-lambda-deployments"
+BUCKET_NAME="foxy-${ENVIRONMENT_NAME}-lambda-deployments-${ACCOUNT}"
 ZIP_FILE="function.zip"
 S3_KEY="lambda/${ZIP_FILE}"
 
