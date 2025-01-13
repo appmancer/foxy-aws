@@ -127,7 +127,7 @@ if [ -n "$QUEUE_STACK" ]; then
 fi
 
 # empty the bucket first
-BUCKET_NAME="dev-lambda-deployments-$ACCOUNT"
+BUCKET_NAME="foxy-${ENVIRONMENT_NAME}-lambda-deployments-${ACCOUNT}"
 
 # Check if the bucket exists
 if aws s3api head-bucket --bucket "$BUCKET_NAME" 2>/dev/null; then
