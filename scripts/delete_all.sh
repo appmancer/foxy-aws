@@ -146,7 +146,19 @@ BUCKET_NAME="foxy-${ENVIRONMENT_NAME}-lambda-deployments-${ACCOUNT}"
 # Check if the bucket exists
 if aws s3api head-bucket --bucket "$BUCKET_NAME" 2>/dev/null; then
   echo "Bucket $BUCKET_NAME exists. Emptying it..."
-  aws s3 rm "s3://$BUCKET_NAME" --recursive
+ BUCKET_NAME="foxy-dev-lambda-deployments-971422686568"
+
+  # Delete all object versions
+  aws s3api list-object-versions --bucket "$BUCKET_NAME" --query 'Versions[].{Key:Key,VersionId:VersionId}' --output text | while read -r Key VersionId; do
+    aws s3api delete-object --bucket "$BUCKET_NAME" --key "$Key" --version-id "$VersionId"
+  done
+
+  # Delete all delete markers
+  aws s3api list-object-versions --bucket "$BUCKET_NAME" --query 'DeleteMarkers[].{Key:Key,VersionId:VersionId}' --output text | while read -r Key VersionId; do
+    aws s3api delete-object --bucket "$BUCKET_NAME" --key "$Key" --version-id "$VersionId"
+  done
+  
+ aws s3 rm "s3://$BUCKET_NAME" --recursive
 else
   echo "Bucket $BUCKET_NAME does not exist. Skipping deletion."
 fi
