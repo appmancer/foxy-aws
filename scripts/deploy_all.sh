@@ -42,7 +42,7 @@ deploy_stack() {
     --stack-name "$STACK_NAME" \
     --template-file "$TEMPLATE_FILE" \
     --parameter-overrides $PARAMETERS \
-    --capabilities CAPABILITY_NAMED_IAM
+    --capabilities CAPABILITY_NAMED_IAM \
     --region eu-north-1
 
   # Report the outputs to the console
@@ -189,6 +189,14 @@ zip -q -j $ZIP_FILE ./scripts/custom_auth_lambda.py
 aws s3 cp $ZIP_FILE s3://$BUCKET_NAME/$S3_KEY --region $REGION
 
 echo "Uploaded $ZIP_FILE to s3://$BUCKET_NAME/$S3_KEY"
+
+# Check if the Lambda package exists in S3
+if aws s3api head-object --bucket "$BUCKET_NAME" --key "$S3_KEY" --region "$REGION" > /dev/null 2>&1; then
+  echo "✅ File s3://$BUCKET_NAME/$S3_KEY exists. Continuing deployment..."
+else
+  echo "❌ File s3://$BUCKET_NAME/$S3_KEY does not exist. Aborting deployment."
+  exit 1
+fi
 
 deploy_stack CustomAuthStack templates/custom_auth_lambda.yaml $CONFIG_FILE
 

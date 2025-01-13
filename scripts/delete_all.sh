@@ -34,6 +34,7 @@ ENVIRONMENT_NAME=$(jq -r '.Parameters[] | select(.ParameterKey=="EnvironmentName
 REGION=$(jq -r '.Region' $PARAMETERS_FILE)
 ACCOUNT=$(jq -r '.Account' $PARAMETERS_FILE)
 ROLE_STACK=$(jq -r '.Stacks.RoleStack' $PARAMETERS_FILE)
+CUSTOM_AUTH_STACK=$(jq -r '.Stacks.CustomAuthStack' $PARAMETERS_FILE)
 USER_POOL_STACK=$(jq -r '.Stacks.UserPoolStack' $PARAMETERS_FILE)
 SERVICE_ACCOUNT_STACK=$(jq -r '.Stacks.ServiceAccountStack // empty' $PARAMETERS_FILE)
 DATABASE_STACK=$(jq -r '.Stacks.DatabaseStack' $PARAMETERS_FILE)
@@ -145,7 +146,9 @@ for ROLE in "${ROLE_NAMES[@]}"; do
     echo "Role $ROLE does not exist. Skipping..."
   fi
 done
-
+if [ -n "$CUSTOM_AUTH_STACK" ]; then
+  delete_stack $CUSTOM_AUTH_STACK
+fi
 if [ -n "$DATABASE_STACK" ]; then
   delete_stack $DATABASE_STACK
 fi
