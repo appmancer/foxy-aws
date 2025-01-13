@@ -1,7 +1,7 @@
 {
   "Environment": "Development",
   "Region": "eu-north-1",
-  "Account": 971422686568
+  "Account": 971422686568,
   "Stacks": {
     "RoleStack": "foxy-role",
     "UserPoolStack": "foxy-dev",
