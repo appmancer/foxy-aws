@@ -40,15 +40,6 @@ Resources:
       Principal: cognito-idp.amazonaws.com
       SourceArn: !Sub "arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/${UserPoolId}"
 
-  # Update Cognito User Pool Triggers
-  CognitoUserPoolLambdaConfig:
-    Type: AWS::Cognito::UserPool
-    Properties:
-      UserPoolId: !Ref UserPoolId
-      CreateAuthChallenge: !GetAtt CognitoCustomAuthLambda.Arn
-      DefineAuthChallenge: !GetAtt CognitoCustomAuthLambda.Arn
-      VerifyAuthChallengeResponse: !GetAtt CognitoCustomAuthLambda.Arn
-
 Outputs:
 
   LambdaFunctionName:

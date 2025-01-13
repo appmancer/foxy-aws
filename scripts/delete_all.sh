@@ -42,6 +42,11 @@ QUEUE_STACK=$(jq -r '.Stacks.QueueStack' $PARAMETERS_FILE)
 BUCKET_STACK=$(jq -r '.Stacks.S3BucketStack' $PARAMETERS_FILE)
 
 # Step 1: Delete the Lambda Function
+echo "Removing triggers..."
+aws cognito-idp update-user-pool \
+  --user-pool-id eu-north-1_U44efVSs5 \
+  --lambda-config '{}'
+echo "Removed"
 echo "Deleting Lambda function..."
 LAMBDA_FUNCTION_NAME="foxy-${ENVIRONMENT_NAME}-CognitoCustomAuthLambda"
 aws lambda delete-function \
