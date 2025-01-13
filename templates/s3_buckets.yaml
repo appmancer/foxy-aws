@@ -2,7 +2,7 @@ Resources:
   LambdaDeploymentBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub "${EnvironmentName}-lambda-deployments"
+      BucketName: !Sub "${ENVIRONMENT_NAME}-lambda-deployments"
       VersioningConfiguration:
         Status: Enabled
 
