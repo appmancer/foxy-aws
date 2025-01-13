@@ -2,6 +2,18 @@
 
 set -e
 
+delete_stack(){
+  local STACK_KEY=$1
+  if aws cloudformation describe-stacks --stack-name "$STACK_KEY" --region "$REGION" > /dev/null 2>&1; then
+    echo "Stack $STACK_KEY exists. Deleting..."
+    aws cloudformation delete-stack --stack-name "$STACK_KEY" --region "$REGION"
+    aws cloudformation wait stack-delete-complete --stack-name "$STACK_KEY" --region "$REGION"
+    echo "Stack $STACK_KEY deletion completed."
+  else
+    echo "Stack $STACK_KEY does not exist. Skipping deletion."
+  fi
+}
+
 # Check if configuration file is provided as a parameter
 if [ "$#" -ne 1 ]; then
   echo "Usage: $0 <config-file>"
@@ -28,28 +40,28 @@ BUCKET_STACK=$(jq -r '.Stacks.S3BucketStack' $PARAMETERS_FILE)
 
 # Step 1: Delete the Lambda Function
 echo "Deleting Lambda function..."
-LAMBDA_FUNCTION_NAME="foxy-${ENVIRONMENT_NAME}-
-CognitoCustomAuthLambda"
+LAMBDA_FUNCTION_NAME="foxy-${ENVIRONMENT_NAME}-CognitoCustomAuthLambda"
 aws lambda delete-function \
   --function-name $LAMBDA_FUNCTION_NAME \
   --region $REGION || echo "Lambda function $LAMBDA_FUNCTION_NAME does not exist."
 
 # Step 2: Delete the Service Account Stack
 if [ -n "$SERVICE_ACCOUNT_STACK" ]; then
-  echo "Deleting Service Account stack..."
-  aws cloudformation delete-stack --stack-name $SERVICE_ACCOUNT_STACK
-  aws cloudformation wait stack-delete-complete --stack-name $SERVICE_ACCOUNT_STACK && echo "Service Account stack deletion completed."
-else
-  echo "No Service Account stack defined. Skipping deletion."
+  delete_stack $SERVICE_ACCOUNT_STACK
 fi
 
 # Step 3: Delete the Cognito User Pool Stack
 echo "Deleting Cognito User Pool stack..."
-aws cloudformation delete-stack --stack-name $USER_POOL_STACK && echo "User Pool stack deletion completed."
+
+if [ -n "$USER_POOL_STACK" ]; then
+  delete_stack $USER_POOL_STACK
+fi
 
 # Step 4: Delete the Role Stack
 echo "Deleting IAM Role stack..."
-aws cloudformation delete-stack --stack-name $ROLE_STACK && echo "Role stack deletion completed."
+if [ -n "$ROLE_STACK" ]; then
+  delete_stack $ROLE_STACK
+fi
 
 # Step 5: Detach Policies and Delete the Lambda Execution Role
 echo "Detaching policies and deleting Lambda execution role..."
@@ -76,10 +88,16 @@ fi
 
 # Wait for stacks to be deleted
 echo "Waiting for stacks to be deleted..."
-aws cloudformation wait stack-delete-complete --stack-name $ROLE_STACK && echo "IAM Role stack deletion completed."
-aws cloudformation wait stack-delete-complete --stack-name $DATABASE_STACK && echo "Database stack deletion completed."
-aws cloudformation wait stack-delete-complete --stack-name $QUEUE_STACK && echo "Queue stack deletion completed."
-aws cloudformation wait stack-delete-complete --stack-name $BUCKET_STACK && echo "Bucket stack deletion completed."
+
+if [ -n "$DATABASE_STACK" ]; then
+  delete_stack $DATABASE_STACK
+fi
+if [ -n "$QUEUE_STACK" ]; then
+  delete_stack $QUEUE_STACK
+fi
+if [ -n "$BUCKET_STACK" ]; then
+  delete_stack $BUCKET_STACK
+fi
 
 echo "Environment reset completed successfully!"
 
