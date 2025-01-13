@@ -180,7 +180,10 @@ aws s3 cp $ZIP_FILE s3://$BUCKET_NAME/$S3_KEY --region $REGION
 
 echo "Uploaded $ZIP_FILE to s3://$BUCKET_NAME/$S3_KEY"
 
-deploy_stack ServiceAccountStack templates/create_service_accounts.yaml $CONFIG_FILE
+deploy_stack CustomAuthStack templates/custom_auth_lambda.yaml $CONFIG_FILE
+
+rm -f $ZIP_FILE
+echo "Cleaned up local $ZIP_FILE"
 
 # Step 5: Deploy DynamoDB Database
 echo "Deploying database..."
