@@ -91,11 +91,15 @@ echo "Deploying IAM Role stacks..."
 echo "Deploying Cognito Role Stack..."
 deploy_stack CognitoRoleStack templates/cognito_lambda_role.yaml $CONFIG_FILE
 if [ $? -ne 0 ]; then
-  echo "Failed to deploy role stack. Exiting."
+  echo "Failed to deploy CognitoRoleStack stack. Exiting."
   exit 1
 fi
 echo "Deploying GitHub Lambda Deployment Role Stack..."
-deploy_stack GitHubLambdaRoleStack templates/github_lambda_deploy_role.yaml
+deploy_stack GitHubLambdaRoleStack templates/github_lambda_deploy_role.yaml $CONFIG_FILE
+if [ $? -ne 0 ]; then
+  echo "Failed to deploy GitHubLambdaRoleStack stack. Exiting."
+  exit 1
+fi
 echo "Complete"
 
 # Fetch the exported Role ARN
@@ -113,6 +117,7 @@ echo "Fetched Role ARN: $ROLE_ARN"
 # Step 2: Deploy the Cognito User Pool stack
 echo "Deploying Cognito User Pool stack..."
 deploy_stack UserPoolStack templates/cognito_user_pool.yaml $CONFIG_FILE
+
 USER_POOL_ID=$(aws cloudformation describe-stacks \
   --stack-name $USER_POOL_STACK \
   --query "Stacks[0].Outputs[?OutputKey=='UserPoolId'].OutputValue" \

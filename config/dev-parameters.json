@@ -24,6 +24,10 @@
     {
       "ParameterKey": "ExportName",
       "ParameterValue": "dev-CognitoLambdaExecutionRoleName"
+    },
+    {
+      "ParameterKey": "GitHubOrg",
+      "ParameterValue": "appmancer"
     }
   ]
 }

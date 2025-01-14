@@ -41,8 +41,16 @@ DATABASE_STACK=$(jq -r '.Stacks.DatabaseStack' $PARAMETERS_FILE)
 QUEUE_STACK=$(jq -r '.Stacks.QueueStack' $PARAMETERS_FILE)
 BUCKET_STACK=$(jq -r '.Stacks.S3BucketStack' $PARAMETERS_FILE)
 
-# Step 1: Delete the Lambda Function
-echo "Removing triggers..."
+
+echo "Removing User Pool..."
+
+USER_POOL_ID=$(aws cloudformation describe-stacks \
+  --stack-name $USER_POOL_STACK \
+  --query "Stacks[0].Outputs[?OutputKey=='UserPoolId'].OutputValue" \
+  --output text \
+  --region $REGION)
+  
+echo "Removing pool id ${USER_POOL_ID}"
 
 if aws cognito-idp describe-user-pool --user-pool-id "$USER_POOL_ID" --region eu-north-1 > /dev/null 2>&1; then
   echo "User Pool exists. Updating Lambda triggers..."
@@ -54,11 +62,21 @@ else
 fi
 
 echo "Removed"
-echo "Deleting Lambda function..."
-LAMBDA_FUNCTION_NAME="foxy-${ENVIRONMENT_NAME}-CognitoCustomAuthLambda"
-aws lambda delete-function \
-  --function-name $LAMBDA_FUNCTION_NAME \
-  --region $REGION || echo "Lambda function $LAMBDA_FUNCTION_NAME does not exist."
+echo "Deleting Lambda functions matching 'foxy-${ENVIRONMENT_NAME}*'..."
+
+# List and delete all Lambda functions matching the pattern
+LAMBDA_FUNCTIONS=$(aws lambda list-functions --region $REGION --query "Functions[?starts_with(FunctionName, 'foxy-${ENVIRONMENT_NAME}')].FunctionName" --output text)
+
+if [ -z "$LAMBDA_FUNCTIONS" ]; then
+  echo "No Lambda functions matching 'foxy-${ENVIRONMENT_NAME}*' found."
+else
+  for FUNCTION in $LAMBDA_FUNCTIONS; do
+    echo "Deleting Lambda function: $FUNCTION"
+    aws lambda delete-function --function-name "$FUNCTION" --region "$REGION" || echo "Failed to delete $FUNCTION."
+  done
+fi
+
+echo "Lambda function cleanup completed."
 
 # Step 2: Delete the Service Account Stack
 if [ -n "$SERVICE_ACCOUNT_STACK" ]; then
