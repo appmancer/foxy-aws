@@ -1,6 +1,6 @@
 # Foxy AWS CloudFormation Deployment
 
-This repository contains a set of CloudFormation templates and deployment scripts to create and manage the infrastructure for Foxy, a project with AWS resources such as Cognito, IAM roles, and service accounts. The deployment process is designed to be fully automated and supports multiple environments (e.g., development, staging, production).
+This repository contains a set of CloudFormation templates and deployment scripts to create and manage the infrastructure for Foxy, a project with AWS resources such as Cognito, IAM roles, DynamoDB, and service accounts. The deployment process is fully automated and supports multiple environments (e.g., development, staging, production).
 
 ## Table of Contents
 
@@ -20,7 +20,7 @@ Ensure the following tools are installed and configured on your system before pr
 
 1. [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html)
 2. [jq](https://stedolan.github.io/jq/) for JSON parsing
-3. Proper AWS credentials with permissions to create and manage CloudFormation stacks, IAM users, roles, and policies.
+3. Proper AWS credentials with permissions to create and manage CloudFormation stacks, IAM users, roles, policies, DynamoDB tables, and Lambda functions.
 
 Run the following command to verify your AWS CLI credentials:
 
@@ -39,10 +39,12 @@ aws sts get-caller-identity
 ├── scripts/
 │   ├── deploy_stack.sh            # Script to deploy a single stack
 │   ├── deploy_all.sh              # Script to deploy all stacks
-│   └── delete_all.sh              # Script to delete all stacks
+│   ├── delete_all.sh              # Script to delete all stacks
+│   └── cleanup_security_groups.sh # Script to clean up unused security groups
 ├── templates/
 │   ├── cognito_lambda_role.yaml   # CloudFormation template for Cognito Lambda execution role
 │   ├── cognito_user_pool.yaml     # CloudFormation template for Cognito User Pool
+│   ├── dynamodb.yaml              # CloudFormation template for DynamoDB tables
 │   └── create_service_accounts.yaml # CloudFormation template for service accounts
 └── README.md                      # This file
 ```
@@ -61,7 +63,8 @@ Each environment requires a parameter file in JSON format, stored in the `config
   "Stacks": {
     "RoleStack": "foxy-role",
     "UserPoolStack": "foxy-dev",
-    "ServiceAccountStack": "foxy-service-accounts"
+    "ServiceAccountStack": "foxy-service-accounts",
+    "DatabaseStack": "foxy-dev-dynamodb"
   },
   "Parameters": [
     {
@@ -123,6 +126,13 @@ Delete all stacks for a specific environment.
 ./scripts/delete_all.sh config/dev-parameters.json
 ```
 
+### cleanup_security_groups.sh
+Deletes all unused security groups.
+
+```bash
+./scripts/cleanup_security_groups.sh
+```
+
 ---
 
 ## How to Deploy
@@ -166,7 +176,8 @@ Ensure the stacks are deployed in the correct order:
 
 1. RoleStack
 2. UserPoolStack
-3. ServiceAccountStack
+3. DatabaseStack (DynamoDB)
+4. ServiceAccountStack
 
 #### No Export Named Error
 Ensure the `ExportName` parameter in `config/<environment>-parameters.json` matches the exported name from the `RoleStack` template.
@@ -184,6 +195,12 @@ Ensure the `ExportName` parameter in `config/<environment>-parameters.json` matc
   aws cloudformation list-exports
   ```
 
+- Verify S3 bucket file existence before deployment:
+
+  ```bash
+  aws s3 ls s3://<bucket-name>/lambda/function.zip
+  ```
+
 ---
 
 ## Contributions
@@ -195,5 +212,4 @@ Feel free to submit issues or pull requests to improve the deployment process.
 ## License
 
 This project is licensed under the MIT License.
-
 
