@@ -87,12 +87,16 @@ SERVICE_ACCOUNT_STACK=$(jq -r '.Stacks.ServiceAccountStack // empty' $PARAMETERS
 CUSTOM_AUTH_STACK=$(jq -r '.Stacks.CustomAuthStack // empty' $PARAMETERS_FILE)
 
 # Step 1: Deploy the IAM Role stack
-echo "Deploying IAM Role stack..."
-./scripts/deploy_stack.sh RoleStack templates/cognito_lambda_role.yaml $CONFIG_FILE
+echo "Deploying IAM Role stacks..."
+echo "Deploying Cognito Role Stack..."
+deploy_stack CognitoRoleStack templates/cognito_lambda_role.yaml $CONFIG_FILE
 if [ $? -ne 0 ]; then
   echo "Failed to deploy role stack. Exiting."
   exit 1
 fi
+echo "Deploying GitHub Lambda Deployment Role Stack..."
+deploy_stack GitHubLambdaRoleStack templates/github_lambda_deploy_role.yaml
+echo "Complete"
 
 # Fetch the exported Role ARN
 ROLE_EXPORT_NAME=$(jq -r '.Parameters[] | select(.ParameterKey=="ExportName") | .ParameterValue' "$CONFIG_FILE")

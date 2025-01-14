@@ -3,7 +3,8 @@
   "Region": "eu-north-1",
   "Account": 971422686568,
   "Stacks": {
-    "RoleStack": "foxy-role",
+    "CognitoRoleStack": "foxy-role",
+    "GitHubLambdaRoleStack": "foxy-github-lambda-role",
     "UserPoolStack": "foxy-dev",
     "ServiceAccountStack": "foxy-service-accounts",
     "DatabaseStack": "foxy-dev-dynamodb",
