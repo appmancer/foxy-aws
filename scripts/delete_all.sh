@@ -33,7 +33,8 @@ ENVIRONMENT=$(jq -r '.Environment' $PARAMETERS_FILE)
 ENVIRONMENT_NAME=$(jq -r '.Parameters[] | select(.ParameterKey=="EnvironmentName") | .ParameterValue' "$PARAMETERS_FILE")
 REGION=$(jq -r '.Region' $PARAMETERS_FILE)
 ACCOUNT=$(jq -r '.Account' $PARAMETERS_FILE)
-ROLE_STACK=$(jq -r '.Stacks.RoleStack' $PARAMETERS_FILE)
+ROLE_STACK=$(jq -r '.Stacks.CognitoRoleStack' $PARAMETERS_FILE)
+GITHUB_LAMBDA_ROLE_STACK=$(jq -r '.Stacks.GitHubLambdaRoleStack' $PARAMETERS_FILE)
 CUSTOM_AUTH_STACK=$(jq -r '.Stacks.CustomAuthStack' $PARAMETERS_FILE)
 USER_POOL_STACK=$(jq -r '.Stacks.UserPoolStack' $PARAMETERS_FILE)
 SERVICE_ACCOUNT_STACK=$(jq -r '.Stacks.ServiceAccountStack // empty' $PARAMETERS_FILE)
@@ -147,6 +148,11 @@ echo "Waiting for stacks to be deleted..."
 echo "Deleting IAM Role stack..."
 if [ -n "$ROLE_STACK" ]; then
   delete_stack $ROLE_STACK
+fi
+
+echo "Deleting GitHub Lambda Role stack..."
+if [ -n "$GITHUB_LAMBDA_ROLE_STACK" ]; then
+  delete_stack $GITHUB_LAMBDA_ROLE_STACK
 fi
 
 # Remove the database roles safely
