@@ -229,4 +229,3 @@ rm -f $LAMBDA_CONFIG_FILE
 echo "Access Key ID: $ACCESS_KEY_ID"
 echo "Secret Access Key: $SECRET_ACCESS_KEY"
 echo "Deployment completed successfully!"
-

@@ -41,13 +41,86 @@ Resources:
                   - "logs:CreateLogStream"
                   - "logs:PutLogEvents"
                 Resource: "arn:aws:logs:*:*:*"
+                
+  RDSMonitoringRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - monitoring.rds.amazonaws.com
+            Action: sts:AssumeRole
+      Path: "/"
+      Policies:
+        - PolicyName: "RDSMonitoringPolicy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "logs:CreateLogGroup"
+                  - "logs:CreateLogStream"
+                  - "logs:PutLogEvents"
+                Resource: "arn:aws:logs:*:*:*"
+                
+  DatabaseAccessRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Path: "/"
+      Policies:
+        - PolicyName: "DatabaseAccessPolicy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: "rds-db:connect"
+                Resource: !Sub "arn:aws:rds-db:${AWS::Region}:${AWS::AccountId}:dbuser:${EnvironmentName}-rds-instance/lambdauser"
+              - Effect: Allow
+                Action:
+                  - "s3:GetObject"
+                  - "s3:ListBucket"
+                  - "s3:DeleteObject"
+                Resource:
+                  - !Sub "arn:aws:s3:::rds-schema-deployments"
+                  - !Sub "arn:aws:s3:::rds-schema-deployments/*"
+              - Effect: Allow
+                Action:
+                  - "logs:CreateLogGroup"
+                  - "logs:CreateLogStream"
+                  - "logs:PutLogEvents"
+                Resource: "arn:aws:logs:*:*:*"
 
 Outputs:
   RoleArn:
     Description: The ARN of the Cognito Lambda Execution Role
     Value: !GetAtt CognitoLambdaExecutionRole.Arn
+
   CognitoLambdaExecutionRoleName:
+    Description: The name of the Cognito Lambda Execution Role
     Value: !Ref CognitoLambdaExecutionRole
     Export:
-      Name: !Ref ExportName
+      Name: !Sub "${EnvironmentName}-CognitoLambdaExecutionRoleName"
+      
+  RDSMonitoringRoleArn:
+    Description: The ARN of the RDS Monitoring Role
+    Value: !GetAtt RDSMonitoringRole.Arn
+    Export:
+      Name: !Sub "${EnvironmentName}-RDSMonitoringRoleArn"
+
+  DatabaseAccessRoleArn:
+    Description: The ARN of the Lambda RDS Access Role
+    Value: !GetAtt DatabaseAccessRole.Arn
+    Export:
+      Name: !Sub "${EnvironmentName}-DatabaseAccessRoleArn"
 

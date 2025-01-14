@@ -205,5 +205,32 @@ if [ -n "$BUCKET_STACK" ]; then
   delete_stack $BUCKET_STACK
 fi
 
-echo "Environment reset completed successfully!"
+# Delete the security groups
+echo "Fetching all security groups in $REGION..."
 
+# List all security groups except 'default'
+SECURITY_GROUP_IDS=$(aws ec2 describe-security-groups \
+  --region $REGION \
+  --query "SecurityGroups[?GroupName!='default'].GroupId" \
+  --output text)
+
+for SG_ID in $SECURITY_GROUP_IDS; do
+  # Check if the security group is attached to any network interface
+  ATTACHMENTS=$(aws ec2 describe-network-interfaces \
+    --filters Name=group-id,Values=$SG_ID \
+    --region $REGION \
+    --query "NetworkInterfaces[].NetworkInterfaceId" \
+    --output text)
+
+  if [[ -z "$ATTACHMENTS" ]]; then
+    echo "Deleting unused Security Group: $SG_ID"
+    aws ec2 delete-security-group --group-id "$SG_ID" --region $REGION
+  else
+    echo "⚠️ Security Group $SG_ID is attached to a resource and cannot be deleted."
+  fi
+done
+
+echo "✅ Security group cleanup complete."
+
+
+echo "Environment reset completed successfully!"
