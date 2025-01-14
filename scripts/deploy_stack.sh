@@ -33,19 +33,14 @@ aws cloudformation deploy \
   --parameter-overrides $PARAMETERS \
   --capabilities CAPABILITY_NAMED_IAM
   
-  # Fetch access keys for the CognitoServiceAccount
-if [ "$STACK_KEY" == "ServiceAccountStack" ]; then
-  COGNITO_USER=$(jq -r '.Parameters[] | select(.ParameterKey=="EnvironmentName") | .ParameterValue' "$CONFIG_FILE")-CognitoServiceAccount
-  echo "Fetching access keys for CognitoServiceAccount: $COGNITO_USER"
+  
+# Report the outputs to the console
+aws cloudformation describe-stacks \
+  --stack-name $STACK_NAME \
+  --query "Stacks[0].Outputs[*].[OutputKey, OutputValue]" \
+  --output table
 
-  ACCESS_KEYS=$(aws iam create-access-key --user-name "$COGNITO_USER")
-  ACCESS_KEY_ID=$(echo "$ACCESS_KEYS" | jq -r '.AccessKey.AccessKeyId')
-  SECRET_ACCESS_KEY=$(echo "$ACCESS_KEYS" | jq -r '.AccessKey.SecretAccessKey')
-
-  echo "Access Key ID: $ACCESS_KEY_ID"
-  echo "Secret Access Key: $SECRET_ACCESS_KEY"
-fi
-
+  
 if [ $? -eq 0 ]; then
   echo "Successfully deployed stack '$STACK_NAME'."
 else

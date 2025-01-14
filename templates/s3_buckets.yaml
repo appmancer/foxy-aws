@@ -1,0 +1,17 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: S3 bucket for Lambda deployments
+
+Parameters:
+  EnvironmentName:
+    Type: String
+    Description: The name of the environment (e.g., dev, staging, prod)
+
+Resources:
+  LambdaDeploymentBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "foxy-${EnvironmentName}-lambda-deployments-${AWS::AccountId}"
+      VersioningConfiguration:
+        Status: Enabled
+    DeletionPolicy: Delete
+

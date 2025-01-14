@@ -1,0 +1,52 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: CloudFormation stack to deploy the Cognito Custom Authentication Lambda function and configure Cognito triggers.
+
+Parameters:
+  EnvironmentName:
+    Type: String
+    Description: The name of the environment (e.g., dev, staging, prod)
+  RoleArn:
+    Type: String
+    Description: ARN of the IAM role for Lambda execution.
+  UserPoolId:
+    Type: String
+    Description: The ID of the Cognito User Pool.
+
+Resources:
+
+  # Lambda Function
+  CognitoCustomAuthLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub "foxy-${EnvironmentName}-CognitoCustomAuthLambda"
+      Handler: custom_auth_lambda.lambda_handler
+      Role: !Ref RoleArn
+      Runtime: python3.9
+      Timeout: 10
+      MemorySize: 128
+      Code:
+        S3Bucket: !Sub "foxy-${EnvironmentName}-lambda-deployments-${AWS::AccountId}"
+        S3Key: lambda/function.zip
+      Environment:
+        Variables:
+          ENVIRONMENT_NAME: !Ref EnvironmentName
+
+  # Lambda Execution Permissions
+  LambdaInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref CognitoCustomAuthLambda
+      Action: lambda:InvokeFunction
+      Principal: cognito-idp.amazonaws.com
+      SourceArn: !Sub "arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/${UserPoolId}"
+
+Outputs:
+
+  LambdaFunctionName:
+    Description: "Name of the Cognito Custom Authentication Lambda function"
+    Value: !Ref CognitoCustomAuthLambda
+
+  LambdaFunctionArn:
+    Description: "ARN of the Cognito Custom Authentication Lambda function"
+    Value: !GetAtt CognitoCustomAuthLambda.Arn
+
