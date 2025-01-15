@@ -105,7 +105,7 @@ fi
 echo "Complete"
 echo "Deploying GitHub Lambda Execution Role Stack..."
 # This is the role that the lambda functions for transactions (validator, broadcaster) will use
-deploy_stack GitHubLambdaExecutionRoleStack templates/github_lambda_deploy_role.yaml $CONFIG_FILE
+deploy_stack GitHubLambdaExecutionRoleStack templates/github_lambda_execution_role.yaml $CONFIG_FILE
 if [ $? -ne 0 ]; then
   echo "Failed to deploy GitHubLambdaExecutionRoleStack stack. Exiting."
   exit 1
