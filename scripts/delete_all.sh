@@ -44,8 +44,8 @@ QUEUE_STACK=$(jq -r '.Stacks.QueueStack' $PARAMETERS_FILE)
 BUCKET_STACK=$(jq -r '.Stacks.S3BucketStack' $PARAMETERS_FILE)
 
 
-echo "Removing User Pool..."# Check if the CloudFormation stack exists
-
+echo "Removing User Pool..."
+# Check if the CloudFormation stack exists
 if aws cloudformation describe-stacks --stack-name "$USER_POOL_STACK" --region "$REGION" > /dev/null 2>&1; then
   USER_POOL_ID=$(aws cloudformation describe-stacks \
     --stack-name "$USER_POOL_STACK" \
