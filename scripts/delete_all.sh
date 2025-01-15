@@ -2,9 +2,10 @@
 
 set -e
 
-remove_policies{
-  local STACK = $1
+remove_policies(){
+  local STACK=$1
 
+  echo "Removing policies for ${STACK}"
   # Check if the Role Stack exists
   if aws cloudformation describe-stacks --stack-name "$STACK" --region "eu-north-1" > /dev/null 2>&1; then
     # Safely retrieve the Lambda Role Name

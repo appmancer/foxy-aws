@@ -4,8 +4,8 @@
   "Account": 971422686568,
   "Stacks": {
     "CognitoRoleStack": "foxy-role",
-    "GitHubLambdaDeployRoleStack": "foxy-github-lambda-deploy-role",
-    "GitHubLambdaExecutionRoleStack": "foxy-github-lambda-execution-role",
+    "GitHubLambdaDeployRoleStack": "foxy-dev-github-lambda-deploy-role",
+    "GitHubLambdaExecutionRoleStack": "foxy-dev-github-lambda-execution-role",
     "UserPoolStack": "foxy-dev",
     "ServiceAccountStack": "foxy-service-accounts",
     "DatabaseStack": "foxy-dev-dynamodb",
