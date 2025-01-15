@@ -11,7 +11,7 @@ Resources:
   LambdaExecutionRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub Foxy-${EnvironmentName}-LambdaExecutionRole
+      RoleName: !Sub Foxy-${EnvironmentName}-GitHub-Lambda-ExecutionRole
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
