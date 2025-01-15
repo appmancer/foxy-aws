@@ -43,7 +43,6 @@ DATABASE_STACK=$(jq -r '.Stacks.DatabaseStack' $PARAMETERS_FILE)
 QUEUE_STACK=$(jq -r '.Stacks.QueueStack' $PARAMETERS_FILE)
 BUCKET_STACK=$(jq -r '.Stacks.S3BucketStack' $PARAMETERS_FILE)
 
-
 echo "Removing User Pool..."
 # Check if the CloudFormation stack exists
 if aws cloudformation describe-stacks --stack-name "$USER_POOL_STACK" --region "$REGION" > /dev/null 2>&1; then
@@ -52,24 +51,20 @@ if aws cloudformation describe-stacks --stack-name "$USER_POOL_STACK" --region "
     --query "Stacks[0].Outputs[?OutputKey=='UserPoolId'].OutputValue" \
     --output text \
     --region "$REGION")
-else
-  echo "Error: CloudFormation stack '$USER_POOL_STACK' does not exist in region '$REGION'."
-  exit 1
-fi
+  
+  # Proceed to delete the User Pool
+  if [[ -n "$USER_POOL_ID" && "$USER_POOL_ID" != "None" ]]; then
+    aws cognito-idp delete-user-pool \
+      --user-pool-id "$USER_POOL_ID" \
+      --region "$REGION"
+    echo "User Pool with ID $USER_POOL_ID has been deleted."
+  else
+    echo "User Pool ID not found in stack '$USER_POOL_STACK'. Skipping deletion."
+  fi
 
-# Check if the CloudFormation stack exists
-if aws cloudformation describe-stacks --stack-name "$USER_POOL_STACK" --region "$REGION" > /dev/null 2>&1; then
-  USER_POOL_ID=$(aws cloudformation describe-stacks \
-    --stack-name "$USER_POOL_STACK" \
-    --query "Stacks[0].Outputs[?OutputKey=='UserPoolId'].OutputValue" \
-    --output text \
-    --region "$REGION")
 else
-  echo "Error: CloudFormation stack '$USER_POOL_STACK' does not exist in region '$REGION'."
-  exit 1
+  echo "Warning: CloudFormation stack '$USER_POOL_STACK' does not exist in region '$REGION'. Skipping User Pool deletion."
 fi
-
-echo "Removing pool id ${USER_POOL_ID}"
 
 if aws cognito-idp describe-user-pool --user-pool-id "$USER_POOL_ID" --region eu-north-1 > /dev/null 2>&1; then
   echo "User Pool exists. Updating Lambda triggers..."
