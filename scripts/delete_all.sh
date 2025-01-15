@@ -44,14 +44,31 @@ QUEUE_STACK=$(jq -r '.Stacks.QueueStack' $PARAMETERS_FILE)
 BUCKET_STACK=$(jq -r '.Stacks.S3BucketStack' $PARAMETERS_FILE)
 
 
-echo "Removing User Pool..."
+echo "Removing User Pool..."# Check if the CloudFormation stack exists
 
-USER_POOL_ID=$(aws cloudformation describe-stacks \
-  --stack-name $USER_POOL_STACK \
-  --query "Stacks[0].Outputs[?OutputKey=='UserPoolId'].OutputValue" \
-  --output text \
-  --region $REGION)
-  
+if aws cloudformation describe-stacks --stack-name "$USER_POOL_STACK" --region "$REGION" > /dev/null 2>&1; then
+  USER_POOL_ID=$(aws cloudformation describe-stacks \
+    --stack-name "$USER_POOL_STACK" \
+    --query "Stacks[0].Outputs[?OutputKey=='UserPoolId'].OutputValue" \
+    --output text \
+    --region "$REGION")
+else
+  echo "Error: CloudFormation stack '$USER_POOL_STACK' does not exist in region '$REGION'."
+  exit 1
+fi
+
+# Check if the CloudFormation stack exists
+if aws cloudformation describe-stacks --stack-name "$USER_POOL_STACK" --region "$REGION" > /dev/null 2>&1; then
+  USER_POOL_ID=$(aws cloudformation describe-stacks \
+    --stack-name "$USER_POOL_STACK" \
+    --query "Stacks[0].Outputs[?OutputKey=='UserPoolId'].OutputValue" \
+    --output text \
+    --region "$REGION")
+else
+  echo "Error: CloudFormation stack '$USER_POOL_STACK' does not exist in region '$REGION'."
+  exit 1
+fi
+
 echo "Removing pool id ${USER_POOL_ID}"
 
 if aws cognito-idp describe-user-pool --user-pool-id "$USER_POOL_ID" --region eu-north-1 > /dev/null 2>&1; then
