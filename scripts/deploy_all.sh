@@ -82,8 +82,6 @@ ENVIRONMENT=$(jq -r '.Environment' $PARAMETERS_FILE)
 REGION=$(jq -r '.Region' $PARAMETERS_FILE)
 ACCOUNT=$(jq -r '.Account' $PARAMETERS_FILE)
 ROLE_STACK=$(jq -r '.Stacks.RoleStack' $PARAMETERS_FILE)
-GITHUB_LAMBDA_DEPLOY_ROLE_STACK=$(jq -r '.Stacks.GitHubLambdaDeployRoleStack' $PARAMETERS_FILE)
-GITHUB_LAMBDA_EXEC_ROLE_STACK=$(jq -r '.Stacks.GitHubLambdaExecutionRoleStack' $PARAMETERS_FILE)
 USER_POOL_STACK=$(jq -r '.Stacks.UserPoolStack' $PARAMETERS_FILE)
 SERVICE_ACCOUNT_STACK=$(jq -r '.Stacks.ServiceAccountStack // empty' $PARAMETERS_FILE)
 CUSTOM_AUTH_STACK=$(jq -r '.Stacks.CustomAuthStack // empty' $PARAMETERS_FILE)
@@ -91,22 +89,25 @@ CUSTOM_AUTH_STACK=$(jq -r '.Stacks.CustomAuthStack // empty' $PARAMETERS_FILE)
 # Step 1: Deploy the IAM Role stack
 echo "Deploying IAM Role stacks..."
 echo "Deploying Cognito Role Stack..."
+# This is the role that the Cognito lambda executes as
 deploy_stack CognitoRoleStack templates/cognito_lambda_role.yaml $CONFIG_FILE
 if [ $? -ne 0 ]; then
   echo "Failed to deploy CognitoRoleStack stack. Exiting."
   exit 1
 fi
 echo "Deploying GitHub Lambda Deployment Role Stack..."
-deploy_stack $GITHUB_LAMBDA_DEPLOY_ROLE_STACK templates/github_lambda_deploy_role.yaml $CONFIG_FILE
+# This is the role used to deploy the lambda functions
+deploy_stack GitHubLambdaDeployRoleStack templates/github_lambda_deploy_role.yaml $CONFIG_FILE
 if [ $? -ne 0 ]; then
-  echo "Failed to deploy ${GITHUB_LAMBDA_DEPLOY_ROLE_STACK} stack. Exiting."
+  echo "Failed to deploy GitHubLambdaDeployRoleStack stack. Exiting."
   exit 1
 fi
 echo "Complete"
 echo "Deploying GitHub Lambda Execution Role Stack..."
-deploy_stack $GITHUB_LAMBDA_EXEC_ROLE_STACK templates/github_lambda_deploy_role.yaml $CONFIG_FILE
+# This is the role that the lambda functions for transactions (validator, broadcaster) will use
+deploy_stack GitHubLambdaExecutionRoleStack templates/github_lambda_deploy_role.yaml $CONFIG_FILE
 if [ $? -ne 0 ]; then
-  echo "Failed to deploy ${GITHUB_LAMBDA_EXEC_ROLE_STACK} stack. Exiting."
+  echo "Failed to deploy GitHubLambdaExecutionRoleStack stack. Exiting."
   exit 1
 fi
 echo "Complete"
