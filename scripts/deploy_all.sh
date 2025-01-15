@@ -82,6 +82,8 @@ ENVIRONMENT=$(jq -r '.Environment' $PARAMETERS_FILE)
 REGION=$(jq -r '.Region' $PARAMETERS_FILE)
 ACCOUNT=$(jq -r '.Account' $PARAMETERS_FILE)
 ROLE_STACK=$(jq -r '.Stacks.RoleStack' $PARAMETERS_FILE)
+GITHUB_LAMBDA_DEPLOY_ROLE_STACK=$(jq -r '.Stacks.GitHubLambdaDeployRoleStack' $PARAMETERS_FILE)
+GITHUB_LAMBDA_EXEC_ROLE_STACK=$(jq -r '.Stacks.GitHubLambdaExecutionRoleStack' $PARAMETERS_FILE)
 USER_POOL_STACK=$(jq -r '.Stacks.UserPoolStack' $PARAMETERS_FILE)
 SERVICE_ACCOUNT_STACK=$(jq -r '.Stacks.ServiceAccountStack // empty' $PARAMETERS_FILE)
 CUSTOM_AUTH_STACK=$(jq -r '.Stacks.CustomAuthStack // empty' $PARAMETERS_FILE)
@@ -95,9 +97,16 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 echo "Deploying GitHub Lambda Deployment Role Stack..."
-deploy_stack GitHubLambdaRoleStack templates/github_lambda_deploy_role.yaml $CONFIG_FILE
+deploy_stack $GITHUB_LAMBDA_DEPLOY_ROLE_STACK templates/github_lambda_deploy_role.yaml $CONFIG_FILE
 if [ $? -ne 0 ]; then
-  echo "Failed to deploy GitHubLambdaRoleStack stack. Exiting."
+  echo "Failed to deploy ${GITHUB_LAMBDA_DEPLOY_ROLE_STACK} stack. Exiting."
+  exit 1
+fi
+echo "Complete"
+echo "Deploying GitHub Lambda Execution Role Stack..."
+deploy_stack $GITHUB_LAMBDA_EXEC_ROLE_STACK templates/github_lambda_deploy_role.yaml $CONFIG_FILE
+if [ $? -ne 0 ]; then
+  echo "Failed to deploy ${GITHUB_LAMBDA_EXEC_ROLE_STACK} stack. Exiting."
   exit 1
 fi
 echo "Complete"
