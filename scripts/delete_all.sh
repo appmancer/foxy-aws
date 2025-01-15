@@ -2,6 +2,57 @@
 
 set -e
 
+remove_policies{
+  local STACK = $1
+
+  # Check if the Role Stack exists
+  if aws cloudformation describe-stacks --stack-name "$STACK" --region "eu-north-1" > /dev/null 2>&1; then
+    # Safely retrieve the Lambda Role Name
+    LAMBDA_ROLE_NAME=$(aws cloudformation describe-stacks \
+      --stack-name "$STACK" \
+      --query "Stacks[0].Outputs[?OutputKey=='CognitoLambdaExecutionRoleName'].OutputValue" \
+      --output text)
+
+    if [ -n "$LAMBDA_ROLE_NAME" ]; then
+      # Check if the IAM Role actually exists
+      if aws iam get-role --role-name "$LAMBDA_ROLE_NAME" > /dev/null 2>&1; then
+
+        # 1. Detach Managed Policies
+        ATTACHED_POLICIES=$(aws iam list-attached-role-policies \
+          --role-name "$LAMBDA_ROLE_NAME" \
+          --query "AttachedPolicies[].PolicyArn" \
+          --output text)
+
+        for POLICY_ARN in $ATTACHED_POLICIES; do
+          echo "Detaching managed policy $POLICY_ARN from role $LAMBDA_ROLE_NAME..."
+          aws iam detach-role-policy --role-name "$LAMBDA_ROLE_NAME" --policy-arn "$POLICY_ARN"
+        done
+
+        # 2. Delete Inline Policies
+        INLINE_POLICIES=$(aws iam list-role-policies \
+          --role-name "$LAMBDA_ROLE_NAME" \
+          --query "PolicyNames[]" \
+          --output text)
+
+        for POLICY_NAME in $INLINE_POLICIES; do
+          echo "Deleting inline policy $POLICY_NAME from role $LAMBDA_ROLE_NAME..."
+          aws iam delete-role-policy --role-name "$LAMBDA_ROLE_NAME" --policy-name "$POLICY_NAME"
+        done
+
+        # 3. Delete the IAM Role
+        aws iam delete-role --role-name "$LAMBDA_ROLE_NAME"
+        echo "IAM role $LAMBDA_ROLE_NAME deleted successfully."
+      else
+        echo "IAM role $LAMBDA_ROLE_NAME does not exist or was already deleted."
+      fi
+    else
+      echo "No Lambda execution role found in the outputs of $STACK."
+    fi
+  else
+    echo "Role stack $STACK does not exist. Skipping role deletion."
+  fi
+}
+
 delete_stack(){
   local STACK_KEY=$1
   if aws cloudformation describe-stacks --stack-name "$STACK_KEY" --region "$REGION" > /dev/null 2>&1; then
@@ -107,52 +158,6 @@ fi
 # Step 4: Detach Policies and Delete the Lambda Execution Role]
 echo "Detaching policies and deleting Lambda execution role..."
 
-# Check if the Role Stack exists
-if aws cloudformation describe-stacks --stack-name "$ROLE_STACK" --region "$REGION" > /dev/null 2>&1; then
-  # Safely retrieve the Lambda Role Name
-  LAMBDA_ROLE_NAME=$(aws cloudformation describe-stacks \
-    --stack-name "$ROLE_STACK" \
-    --query "Stacks[0].Outputs[?OutputKey=='CognitoLambdaExecutionRoleName'].OutputValue" \
-    --output text)
-
-  if [ -n "$LAMBDA_ROLE_NAME" ]; then
-    # Check if the IAM Role actually exists
-    if aws iam get-role --role-name "$LAMBDA_ROLE_NAME" > /dev/null 2>&1; then
-
-      # 1. Detach Managed Policies
-      ATTACHED_POLICIES=$(aws iam list-attached-role-policies \
-        --role-name "$LAMBDA_ROLE_NAME" \
-        --query "AttachedPolicies[].PolicyArn" \
-        --output text)
-
-      for POLICY_ARN in $ATTACHED_POLICIES; do
-        echo "Detaching managed policy $POLICY_ARN from role $LAMBDA_ROLE_NAME..."
-        aws iam detach-role-policy --role-name "$LAMBDA_ROLE_NAME" --policy-arn "$POLICY_ARN"
-      done
-
-      # 2. Delete Inline Policies
-      INLINE_POLICIES=$(aws iam list-role-policies \
-        --role-name "$LAMBDA_ROLE_NAME" \
-        --query "PolicyNames[]" \
-        --output text)
-
-      for POLICY_NAME in $INLINE_POLICIES; do
-        echo "Deleting inline policy $POLICY_NAME from role $LAMBDA_ROLE_NAME..."
-        aws iam delete-role-policy --role-name "$LAMBDA_ROLE_NAME" --policy-name "$POLICY_NAME"
-      done
-
-      # 3. Delete the IAM Role
-      aws iam delete-role --role-name "$LAMBDA_ROLE_NAME"
-      echo "IAM role $LAMBDA_ROLE_NAME deleted successfully."
-    else
-      echo "IAM role $LAMBDA_ROLE_NAME does not exist or was already deleted."
-    fi
-  else
-    echo "No Lambda execution role found in the outputs of $ROLE_STACK."
-  fi
-else
-  echo "Role stack $ROLE_STACK does not exist. Skipping role deletion."
-fi
 
 
 # Step 5: Delete the remaining stacks
@@ -160,16 +165,19 @@ fi
 echo "Waiting for stacks to be deleted..."
 echo "Deleting IAM Role stack..."
 if [ -n "$ROLE_STACK" ]; then
+  remove_policies $ROLE_STACK
   delete_stack $ROLE_STACK
 fi
 
 echo "Deleting GitHub Lambda Deploy Role stack..."
 if [ -n "$GITHUB_LAMBDA_DEPLOY_ROLE_STACK" ]; then
+  remove_policies $GITHUB_LAMBDA_DEPLOY_ROLE_STACK
   delete_stack $GITHUB_LAMBDA_DEPLOY_ROLE_STACK
 fi
 
 echo "Deleting GitHub Lambda Deploy Role stack..."
 if [ -n "$GITHUB_LAMBDA_EXEC_ROLE_STACK" ]; then
+  remove_policies $GITHUB_LAMBDA_EXEC_ROLE_STACK
   delete_stack $GITHUB_LAMBDA_EXEC_ROLE_STACK
 fi
 
