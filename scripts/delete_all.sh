@@ -159,8 +159,6 @@ fi
 # Step 4: Detach Policies and Delete the Lambda Execution Role]
 echo "Detaching policies and deleting Lambda execution role..."
 
-
-
 # Step 5: Delete the remaining stacks
 # Wait for stacks to be deleted
 echo "Waiting for stacks to be deleted..."

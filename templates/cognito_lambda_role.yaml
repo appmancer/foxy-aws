@@ -18,6 +18,7 @@ Resources:
               Service:
                 - lambda.amazonaws.com
             Action: sts:AssumeRole
+      RoleName: !Sub Foxy-${EnvironmentName}-Cognito-Lambda-ExecutionRole
       Path: "/"
       Policies:
         - PolicyName: "CognitoFullAccessPolicy"
@@ -51,5 +52,5 @@ Outputs:
     Description: The name of the Cognito Lambda Execution Role
     Value: !Ref CognitoLambdaExecutionRole
     Export:
-      Name: !Sub "Foxy-${EnvironmentName}-CognitoLambdaExecutionRoleName"
+      Name: !Sub "Foxy-${EnvironmentName}-Cognito-Lambda-ExecutionRoleName"
       
