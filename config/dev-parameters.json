@@ -24,7 +24,7 @@
     },
     {
       "ParameterKey": "ExportName",
-      "ParameterValue": "dev-CognitoLambdaExecutionRoleName"
+      "ParameterValue": "Foxy-dev-Cognito-Lambda-ExecutionRoleName"
     },
     {
       "ParameterKey": "GitHubOrg",
