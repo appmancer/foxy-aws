@@ -2,24 +2,29 @@ AWSTemplateFormatVersion: '2010-09-09'
 Description: >
   CloudFormation stack to create SQS queues and IAM roles for Foxy transaction processing.
 
+Parameters:
+  EnvironmentName:
+    Type: String
+    Description: The name of the environment (e.g., dev, staging, prod)
+
 Resources:
 
   # Dead Letter Queues
   TransactionSigningDLQ:
     Type: AWS::SQS::Queue
     Properties:
-      QueueName: TransactionSigningDLQ
+      QueueName: !Sub Foxy-${EnvironmentName}-TransactionSigningDLQ
 
   TransactionBroadcastDLQ:
     Type: AWS::SQS::Queue
     Properties:
-      QueueName: TransactionBroadcastDLQ
+      QueueName: !Sub Foxy-${EnvironmentName}-TransactionBroadcastDLQ
 
   # Main Queues with DLQ Redrive Policy
   TransactionSigningQueue:
     Type: AWS::SQS::Queue
     Properties:
-      QueueName: TransactionSigningQueue
+      QueueName: !Sub Foxy-${EnvironmentName}-TransactionSigningQueue
       RedrivePolicy:
         deadLetterTargetArn: !GetAtt TransactionSigningDLQ.Arn
         maxReceiveCount: 5
@@ -27,7 +32,7 @@ Resources:
   TransactionBroadcastQueue:
     Type: AWS::SQS::Queue
     Properties:
-      QueueName: TransactionBroadcastQueue
+      QueueName: !Sub Foxy-${EnvironmentName}-TransactionBroadcastQueue
       RedrivePolicy:
         deadLetterTargetArn: !GetAtt TransactionBroadcastDLQ.Arn
         maxReceiveCount: 5
@@ -36,7 +41,7 @@ Resources:
   FoxyLambdaSQSRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: FoxyLambdaSQSRole
+      RoleName: !Sub Foxy-${EnvironmentName}-FoxyLambdaSQSRole
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
