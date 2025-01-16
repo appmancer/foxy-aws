@@ -35,6 +35,10 @@ Resources:
                 Action:
                   - sqs:SendMessage
                   - sqs:ReceiveMessage
+                  - sqs:GetQueueAttributes
+                  - sqs:DeleteMessage
+                  - sqs:ChangeMessageVisibility
+                  - sqs:ListQueues 
                 Resource: !Sub "arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:Foxy-${EnvironmentName}-*"
 
               - Effect: Allow

@@ -70,8 +70,12 @@ Resources:
 
           - Effect: Allow
             Action:
+              - sqs:SendMessage
+              - sqs:ReceiveMessage
               - sqs:GetQueueAttributes
-              - sqs:ListQueues
+              - sqs:DeleteMessage
+              - sqs:ChangeMessageVisibility
+              - sqs:ListQueues 
             Resource: "*"
 
           - Effect: Allow
