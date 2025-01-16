@@ -3,7 +3,9 @@
   "Region": "eu-north-1",
   "Account": 971422686568,
   "Stacks": {
-    "RoleStack": "foxy-role",
+    "CognitoRoleStack": "foxy-role",
+    "GitHubLambdaDeployRoleStack": "foxy-dev-github-lambda-deploy-role",
+    "GitHubLambdaExecutionRoleStack": "foxy-dev-github-lambda-execution-role",
     "UserPoolStack": "foxy-dev",
     "ServiceAccountStack": "foxy-service-accounts",
     "DatabaseStack": "foxy-dev-dynamodb",
@@ -22,7 +24,11 @@
     },
     {
       "ParameterKey": "ExportName",
-      "ParameterValue": "dev-CognitoLambdaExecutionRoleName"
+      "ParameterValue": "Foxy-dev-Cognito-Lambda-ExecutionRoleName"
+    },
+    {
+      "ParameterKey": "GitHubOrg",
+      "ParameterValue": "appmancer"
     }
   ]
 }

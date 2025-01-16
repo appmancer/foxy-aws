@@ -87,12 +87,30 @@ SERVICE_ACCOUNT_STACK=$(jq -r '.Stacks.ServiceAccountStack // empty' $PARAMETERS
 CUSTOM_AUTH_STACK=$(jq -r '.Stacks.CustomAuthStack // empty' $PARAMETERS_FILE)
 
 # Step 1: Deploy the IAM Role stack
-echo "Deploying IAM Role stack..."
-./scripts/deploy_stack.sh RoleStack templates/cognito_lambda_role.yaml $CONFIG_FILE
+echo "Deploying IAM Role stacks..."
+echo "Deploying Cognito Role Stack..."
+# This is the role that the Cognito lambda executes as
+deploy_stack CognitoRoleStack templates/cognito_lambda_role.yaml $CONFIG_FILE
 if [ $? -ne 0 ]; then
-  echo "Failed to deploy role stack. Exiting."
+  echo "Failed to deploy CognitoRoleStack stack. Exiting."
   exit 1
 fi
+echo "Deploying GitHub Lambda Deployment Role Stack..."
+# This is the role used to deploy the lambda functions
+deploy_stack GitHubLambdaDeployRoleStack templates/github_lambda_deploy_role.yaml $CONFIG_FILE
+if [ $? -ne 0 ]; then
+  echo "Failed to deploy GitHubLambdaDeployRoleStack stack. Exiting."
+  exit 1
+fi
+echo "Complete"
+echo "Deploying GitHub Lambda Execution Role Stack..."
+# This is the role that the lambda functions for transactions (validator, broadcaster) will use
+deploy_stack GitHubLambdaExecutionRoleStack templates/github_lambda_execution_role.yaml $CONFIG_FILE
+if [ $? -ne 0 ]; then
+  echo "Failed to deploy GitHubLambdaExecutionRoleStack stack. Exiting."
+  exit 1
+fi
+echo "Complete"
 
 # Fetch the exported Role ARN
 ROLE_EXPORT_NAME=$(jq -r '.Parameters[] | select(.ParameterKey=="ExportName") | .ParameterValue' "$CONFIG_FILE")
@@ -109,6 +127,7 @@ echo "Fetched Role ARN: $ROLE_ARN"
 # Step 2: Deploy the Cognito User Pool stack
 echo "Deploying Cognito User Pool stack..."
 deploy_stack UserPoolStack templates/cognito_user_pool.yaml $CONFIG_FILE
+
 USER_POOL_ID=$(aws cloudformation describe-stacks \
   --stack-name $USER_POOL_STACK \
   --query "Stacks[0].Outputs[?OutputKey=='UserPoolId'].OutputValue" \

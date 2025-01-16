@@ -1,0 +1,94 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: IAM Role for GitHub Actions to deploy Lambda functions for foxy-lambda and foxy-lambda-transactions.
+
+Parameters:
+  GitHubOrg:
+    Type: String
+    Default: appmancer
+    Description: GitHub username or organization name.
+
+  EnvironmentName:
+    Type: String
+    Description: The name of the environment (e.g., dev, staging, prod)
+
+Resources:
+
+  GitHubLambdaDeployRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub Foxy-${EnvironmentName}-GitHub-Lambda-Deploy-Role
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated: arn:aws:iam::971422686568:oidc-provider/token.actions.githubusercontent.com
+            Action: sts:AssumeRoleWithWebIdentity
+            Condition:
+              StringEquals:
+                token.actions.githubusercontent.com:aud: sts.amazonaws.com
+                token.actions.githubusercontent.com:sub:
+                  - !Sub "repo:${GitHubOrg}/foxy-lambda:ref:refs/heads/main"
+                  - !Sub "repo:${GitHubOrg}/foxy-lambda:ref:refs/heads/dev"
+                  - !Sub "repo:${GitHubOrg}/foxy-lambda-transactions:ref:refs/heads/main"
+                  - !Sub "repo:${GitHubOrg}/foxy-lambda-transactions:ref:refs/heads/dev"
+
+  LambdaDeploymentPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: !Sub Foxy-${EnvironmentName}-GitHubLambdaDeploymentPolicy
+      Roles:
+        - !Ref GitHubLambdaDeployRole
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - lambda:UpdateFunctionCode
+              - lambda:UpdateFunctionConfiguration
+              - lambda:CreateFunction
+              - lambda:InvokeFunction
+              - lambda:DeleteFunction
+              - lambda:GetFunction
+              - lambda:CreateEventSourceMapping
+              - lambda:DeleteEventSourceMapping
+              - lambda:ListEventSourceMappings
+            Resource: "*"
+
+          - Effect: Allow
+            Action:
+              - logs:CreateLogGroup
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+            Resource: !Sub "arn:aws:logs:eu-north-1:${AWS::AccountId}:log-group:/aws/lambda/Foxy-${EnvironmentName}-*:*"
+
+          - Effect: Allow
+            Action:
+              - s3:GetObject
+              - s3:PutObject
+            Resource: !Sub "arn:aws:s3:::foxy-${EnvironmentName}-lambda-deployments-*/*"
+
+          - Effect: Allow
+            Action:
+              - sqs:SendMessage
+              - sqs:ReceiveMessage
+              - sqs:GetQueueAttributes
+              - sqs:DeleteMessage
+              - sqs:ChangeMessageVisibility
+              - sqs:ListQueues 
+            Resource: "*"
+
+          - Effect: Allow
+            Action:
+              - iam:PassRole
+            Resource: !Sub "arn:aws:iam::971422686568:role/Foxy-${EnvironmentName}-GitHub-Lambda-ExecutionRole"
+
+Outputs:
+  GitHubLambdaDeployRoleArn:
+    Description: ARN of the IAM Role for GitHub Actions to deploy Lambdas.
+    Value: !GetAtt GitHubLambdaDeployRole.Arn
+
+  LambdaDeploymentPolicyArn:
+    Description: ARN of the IAM Policy for Lambda deployment.
+    Value: !Ref LambdaDeploymentPolicy
+
