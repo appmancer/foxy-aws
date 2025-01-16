@@ -49,6 +49,7 @@ Resources:
               - lambda:CreateFunction
               - lambda:InvokeFunction
               - lambda:DeleteFunction
+              - lambda:GetFunction
             Resource: "*"
 
           - Effect: Allow
@@ -67,7 +68,7 @@ Resources:
           - Effect: Allow
             Action:
               - iam:PassRole
-            Resource: !Sub "arn:aws:iam::971422686568:role/Foxy-${EnvironmentName}-LambdaExecutionRole"
+            Resource: !Sub "arn:aws:iam::971422686568:role/Foxy-${EnvironmentName}-GitHub-Lambda-ExecutionRole"
 
 Outputs:
   GitHubLambdaDeployRoleArn:
