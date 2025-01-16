@@ -50,6 +50,9 @@ Resources:
               - lambda:InvokeFunction
               - lambda:DeleteFunction
               - lambda:GetFunction
+              - lambda:CreateEventSourceMapping
+              - lambda:DeleteEventSourceMapping
+              - lambda:ListEventSourceMappings
             Resource: "*"
 
           - Effect: Allow
@@ -64,6 +67,12 @@ Resources:
               - s3:GetObject
               - s3:PutObject
             Resource: !Sub "arn:aws:s3:::foxy-${EnvironmentName}-lambda-deployments-*/*"
+
+          - Effect: Allow
+            Action:
+              - sqs:GetQueueAttributes
+              - sqs:ListQueues
+            Resource: "*"
 
           - Effect: Allow
             Action:
