@@ -128,6 +128,16 @@ else
 fi
 
 echo "Removed"
+
+# List and delete all event source mappings starting with Foxy-{EnvironmentName}
+echo "Deleting trigges matching 'foxy-${ENVIRONMENT_NAME}*'..."
+aws lambda list-event-source-mappings \
+  --query "EventSourceMappings[?starts_with(FunctionArn, 'arn:aws:lambda:eu-north-1:*:function:Foxy-${ENVIRONMENT_NAME}')].UUID" \
+  --output text | while read uuid; do
+    echo "Deleting trigger $uuid..."
+    aws lambda delete-event-source-mapping --uuid "$uuid"
+  done
+
 echo "Deleting Lambda functions matching 'foxy-${ENVIRONMENT_NAME}*'..."
 
 # List and delete all Lambda functions matching the pattern
