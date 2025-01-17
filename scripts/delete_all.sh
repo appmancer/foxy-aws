@@ -94,6 +94,7 @@ SERVICE_ACCOUNT_STACK=$(jq -r '.Stacks.ServiceAccountStack // empty' $PARAMETERS
 DATABASE_STACK=$(jq -r '.Stacks.DatabaseStack' $PARAMETERS_FILE)
 QUEUE_STACK=$(jq -r '.Stacks.QueueStack' $PARAMETERS_FILE)
 BUCKET_STACK=$(jq -r '.Stacks.S3BucketStack' $PARAMETERS_FILE)
+API_GATEWAY_STACK=$(jq -r '.Stacks.APIGatewayStack' $PARAMETERS_FILE)
 
 echo "Removing User Pool..."
 # Check if the CloudFormation stack exists
@@ -225,6 +226,9 @@ if [ -n "$DATABASE_STACK" ]; then
 fi
 if [ -n "$QUEUE_STACK" ]; then
   delete_stack $QUEUE_STACK
+fi
+if [ -n "$API_GATEWAY_STACK" ]; then
+  delete_stack $API_GATEWAY_STACK
 fi
 
 # empty the bucket first
