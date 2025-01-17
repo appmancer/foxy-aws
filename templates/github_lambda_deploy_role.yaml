@@ -77,6 +77,13 @@ Resources:
               - sqs:ChangeMessageVisibility
               - sqs:ListQueues 
             Resource: "*"
+            
+            
+          - Effect: Allow
+            Action:
+              - apigateway:GET
+              - apigateway:GETRestApis
+            Resource: "*"
 
           - Effect: Allow
             Action:

@@ -6,7 +6,7 @@
     "CognitoRoleStack": "foxy-staging-role",
     "GitHubLambdaDeployRoleStack": "foxy-staging-github-lambda-deploy-role",
     "GitHubLambdaExecutionRoleStack": "foxy-staging-github-lambda-execution-role",
-    "UserPoolStack": "foxy-staging",
+    "UserPoolStack": "foxy-staging-user-pool",
     "ServiceAccountStack": "foxy-staging-service-accounts",
     "DatabaseStack": "foxy-staging-dynamodb",
     "QueueStack": "foxy-staging-queues",
