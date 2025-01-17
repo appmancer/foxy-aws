@@ -71,6 +71,26 @@ Resources:
         IntegrationHttpMethod: POST
         Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CustomAuthLambdaArn}/invocations
 
+  # Public /refresh Endpoint
+  RefreshResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref FoxyApiGateway
+      ParentId: !GetAtt FoxyApiGateway.RootResourceId
+      PathPart: refresh
+
+  RefreshPostMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref FoxyApiGateway
+      ResourceId: !Ref RefreshResource
+      HttpMethod: POST
+      AuthorizationType: NONE  # Refresh token should be public (token validated in Lambda)
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CustomAuthLambdaArn}/invocations
+
   # Deployment
   ApiDeployment:
     Type: AWS::ApiGateway::Deployment
