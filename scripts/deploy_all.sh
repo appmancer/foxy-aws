@@ -247,7 +247,7 @@ echo "Complete."
 
 # Step 7: Configuring API Gateway
 echo "Configuring API Gateway"
-deploy_stack APIGatewayStack template/api_gateway.yaml $CONFIG_FILE "CustomAuthLambdaArn=$CUSTOM_AUTH_LAMBDA_ARN"
+deploy_stack APIGatewayStack templates/api_gateway.yaml $CONFIG_FILE "CustomAuthLambdaArn=$CUSTOM_AUTH_LAMBDA_ARN"
 
 # Cleanup
 rm -f $LAMBDA_CONFIG_FILE
