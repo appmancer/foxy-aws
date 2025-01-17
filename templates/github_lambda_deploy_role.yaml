@@ -90,7 +90,7 @@ Resources:
             Action:
               - iam:PassRole
             Resource:
-              - !Sub "arn:aws:iam::971422686568:role/Foxy-${EnvironmentName}-GitHub-Lambda-DeployRole"
+              - !Sub "arn:aws:iam::971422686568:role/Foxy-${EnvironmentName}-GitHub-Lambda-Deploy-Role"
               - !Sub "arn:aws:iam::971422686568:role/Foxy-${EnvironmentName}-GitHub-Lambda-ExecutionRole"
 Outputs:
   GitHubLambdaDeployRoleArn:
