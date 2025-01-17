@@ -85,6 +85,14 @@ Resources:
               - apigateway:GET
               - apigateway:GETRestApis
             Resource: "*"
+            
+          - Effect: Allow
+            Action:
+              - apigateway:POST
+              - apigateway:PUT
+              - apigateway:PATCH
+              - apigateway:DELETE
+            Resource: "arn:aws:apigateway:eu-north-1::/restapis/*"
 
           - Effect: Allow
             Action:
