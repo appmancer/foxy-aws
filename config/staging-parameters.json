@@ -13,7 +13,7 @@
     "CustomAuthStack": "foxy-staging-custom-auth",
     "S3BucketStack": "foxy-staging-s3-buckets",
     "APIGatewayStack": "foxy-staging-api-gateway"
-  },
+  },	
   "Parameters": [
     {
       "ParameterKey": "EnvironmentName",

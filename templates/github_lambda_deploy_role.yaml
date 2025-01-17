@@ -53,6 +53,7 @@ Resources:
               - lambda:CreateEventSourceMapping
               - lambda:DeleteEventSourceMapping
               - lambda:ListEventSourceMappings
+              - lambda:TagResource
             Resource: "*"
 
           - Effect: Allow
@@ -88,8 +89,9 @@ Resources:
           - Effect: Allow
             Action:
               - iam:PassRole
-            Resource: !Sub "arn:aws:iam::971422686568:role/Foxy-${EnvironmentName}-GitHub-Lambda-ExecutionRole"
-
+            Resource:
+              - !Sub "arn:aws:iam::971422686568:role/Foxy-${EnvironmentName}-GitHub-Lambda-DeployRole"
+              - !Sub "arn:aws:iam::971422686568:role/Foxy-${EnvironmentName}-GitHub-Lambda-ExecutionRole"
 Outputs:
   GitHubLambdaDeployRoleArn:
     Description: ARN of the IAM Role for GitHub Actions to deploy Lambdas.
