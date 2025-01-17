@@ -11,7 +11,8 @@
     "DatabaseStack": "foxy-dev-dynamodb",
     "QueueStack": "foxy-dev-queues",
     "CustomAuthStack": "foxy-dev-custom-auth",
-    "S3BucketStack": "foxy-dev-s3-buckets"
+    "S3BucketStack": "foxy-dev-s3-buckets",
+    "APIGateway": "foxy-dev-api-gateway"
   },
   "Parameters": [
     {

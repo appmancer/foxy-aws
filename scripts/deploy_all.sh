@@ -7,6 +7,7 @@ deploy_stack() {
   local STACK_KEY=$1
   local TEMPLATE_FILE=$2
   local CONFIG_FILE=$3
+  shift 3  # Shift past the first three arguments to capture any additional parameters
 
   # Extract stack name from config file
   local STACK_NAME
@@ -26,14 +27,10 @@ deploy_stack() {
   local PARAMETERS
   PARAMETERS=$(jq -r '.Parameters[] | "\(.ParameterKey)=\(.ParameterValue)"' "$CONFIG_FILE")
 
-  # Append Role ARN if provided
-  if [ -n "$ROLE_ARN" ]; then
-    PARAMETERS="$PARAMETERS RoleArn=$ROLE_ARN"
-  fi
-  
-  if [ -n "$USER_POOL_ID" ]; then
-    PARAMETERS="$PARAMETERS UserPoolId=$USER_POOL_ID"
-  fi
+  # Append additional parameters passed to the function
+  for param in "$@"; do
+    PARAMETERS="$PARAMETERS $param"
+  done
   
   echo "Deploying stack '$STACK_NAME' with template '$TEMPLATE_FILE' and parameters: $PARAMETERS"
 
@@ -104,7 +101,7 @@ if [ $? -ne 0 ]; then
 fi
 echo "Complete"
 echo "Deploying GitHub Lambda Execution Role Stack..."
-# This is the role that the lambda functions for transactions (validator, broadcaster) will use
+# This is the role that the lambda functions for transactions (validation, broadcaster) will use
 deploy_stack GitHubLambdaExecutionRoleStack templates/github_lambda_execution_role.yaml $CONFIG_FILE
 if [ $? -ne 0 ]; then
   echo "Failed to deploy GitHubLambdaExecutionRoleStack stack. Exiting."
@@ -217,7 +214,7 @@ else
   exit 1
 fi
 
-deploy_stack CustomAuthStack templates/custom_auth_lambda.yaml $CONFIG_FILE
+deploy_stack CustomAuthStack templates/custom_auth_lambda.yaml $CONFIG_FILE "RoleArn=$ROLE_ARN" "UserPoolId=$USER_POOL_ID"
 
 # this used to work in cloudformation, but I've had to move it here.  TODO: fix.
 
@@ -232,6 +229,12 @@ aws cognito-idp update-user-pool \
 rm -f $ZIP_FILE
 echo "Cleaned up local $ZIP_FILE"
 
+CUSTOM_AUTH_LAMBDA_ARN=$(aws cloudformation describe-stacks \
+  --stack-name $CUSTOM_AUTH_STACK \
+  --query "Stacks[0].Outputs[?OutputKey=='LambdaFunctionArn'].OutputValue" \
+  --output text \
+  --region $REGION)
+
 # Step 5: Deploy DynamoDB Database
 echo "Deploying database..."
 deploy_stack DatabaseStack templates/database.yaml $CONFIG_FILE
@@ -241,6 +244,10 @@ echo "Complete."
 echo "Deploying queues..."
 deploy_stack QueueStack templates/queues.yaml $CONFIG_FILE
 echo "Complete."
+
+# Step 7: Configuring API Gateway
+echo "Configuring API Gateway"
+deploy_stack APIGateway template/api_gateway.yaml $CONFIG_FILE "CustomAuthLambdaArn=$CUSTOM_AUTH_LAMBDA_ARN"
 
 # Cleanup
 rm -f $LAMBDA_CONFIG_FILE

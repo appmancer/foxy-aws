@@ -1,0 +1,92 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: CloudFormation stack to deploy API Gateway with Custom Lambda Authorizer and Wildcard Proxy Integration for Foxy.
+
+Parameters:
+  EnvironmentName:
+    Type: String
+    Description: Environment (dev, staging, prod)
+
+  CustomAuthLambdaArn:
+    Type: String
+    Description: ARN of the Custom Auth Lambda
+
+Resources:
+
+  # API Gateway
+  FoxyApiGateway:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: !Sub "foxy-${EnvironmentName}-api"
+      Description: "API Gateway for Foxy in ${EnvironmentName}"
+
+  # Wildcard Proxy Resource
+  ProxyResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref FoxyApiGateway
+      ParentId: !GetAtt FoxyApiGateway.RootResourceId
+      PathPart: "{proxy+}"
+
+  # Custom Lambda Authorizer
+  FoxyLambdaAuthorizer:
+    Type: AWS::ApiGateway::Authorizer
+    Properties:
+      Name: !Sub "foxy-${EnvironmentName}-lambda-auth"
+      Type: REQUEST
+      AuthorizerUri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CustomAuthLambdaArn}/invocations
+      IdentitySource: method.request.header.Authorization
+      RestApiId: !Ref FoxyApiGateway
+
+  # Wildcard Proxy Method with Custom Authorizer
+  ProxyMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref FoxyApiGateway
+      ResourceId: !Ref ProxyResource
+      HttpMethod: ANY
+      AuthorizationType: CUSTOM
+      AuthorizerId: !Ref FoxyLambdaAuthorizer
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CustomAuthLambdaArn}/invocations
+
+  # Public /auth Endpoint
+  AuthResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref FoxyApiGateway
+      ParentId: !GetAtt FoxyApiGateway.RootResourceId
+      PathPart: auth
+
+  AuthPostMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref FoxyApiGateway
+      ResourceId: !Ref AuthResource
+      HttpMethod: POST
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CustomAuthLambdaArn}/invocations
+
+  # Deployment
+  ApiDeployment:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn:
+      - ProxyMethod
+      - AuthPostMethod
+    Properties:
+      RestApiId: !Ref FoxyApiGateway
+      StageName: !Ref EnvironmentName
+
+Outputs:
+  ApiGatewayUrl:
+    Description: "API Gateway Invoke URL"
+    Value: !Sub "https://${FoxyApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${EnvironmentName}"
+
+  CustomAuthLambdaArn:
+    Description: "ARN of the Custom Auth Lambda"
+    Value: !Ref CustomAuthLambdaArn
+
