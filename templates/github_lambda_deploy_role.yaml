@@ -54,7 +54,9 @@ Resources:
               - lambda:DeleteEventSourceMapping
               - lambda:ListEventSourceMappings
               - lambda:TagResource
-            Resource: "*"
+              - lambda:AddPermission
+              - lambda:RemovePermission
+            Resource: "arn:aws:lambda:eu-north-1:971422686568:function:foxy-*"
 
           - Effect: Allow
             Action:
@@ -79,7 +81,6 @@ Resources:
               - sqs:ListQueues 
             Resource: "*"
             
-            
           - Effect: Allow
             Action:
               - apigateway:GET
@@ -92,7 +93,10 @@ Resources:
               - apigateway:PUT
               - apigateway:PATCH
               - apigateway:DELETE
-            Resource: "arn:aws:apigateway:eu-north-1::/restapis/*"
+              - apigateway:GET
+            Resource: 
+              - "arn:aws:apigateway:eu-north-1::/restapis/*"
+              - "arn:aws:apigateway:eu-north-1::/restapis/*/resources/*"
 
           - Effect: Allow
             Action:
