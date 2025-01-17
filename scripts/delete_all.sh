@@ -95,6 +95,8 @@ DATABASE_STACK=$(jq -r '.Stacks.DatabaseStack' $PARAMETERS_FILE)
 QUEUE_STACK=$(jq -r '.Stacks.QueueStack' $PARAMETERS_FILE)
 BUCKET_STACK=$(jq -r '.Stacks.S3BucketStack' $PARAMETERS_FILE)
 API_GATEWAY_STACK=$(jq -r '.Stacks.APIGatewayStack' $PARAMETERS_FILE)
+ROLE_EXPORT_NAME=$(jq -r '.Parameters[] | select(.ParameterKey=="ExportName") | .ParameterValue' "$CONFIG_FILE")
+ROLE_NAME=$(aws cloudformation list-exports --query "Exports[?Name=='${ROLE_EXPORT_NAME}'].Value" --output text)
 
 echo "Removing User Pool..."
 # Check if the CloudFormation stack exists
@@ -192,7 +194,7 @@ if [ -n "$GITHUB_LAMBDA_EXEC_ROLE_STACK" ]; then
 fi
 
 # Remove the database roles safely
-ROLE_NAMES=("foxy_dev_AppRole" "foxy_dev_AdminRole" "foxy_dev_ReportingRole")
+ROLE_NAMES=("foxy_${ENVIRONMENT_NAME}_AppRole" "foxy_${ENVIRONMENT_NAME}_AdminRole" "foxy_${ENVIRONMENT_NAME}_ReportingRole")
 
 for ROLE in "${ROLE_NAMES[@]}"; do
   # Check if the role exists
