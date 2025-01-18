@@ -3,7 +3,7 @@
   "Region": "eu-north-1",
   "Account": 971422686568,
   "Stacks": {
-    "CognitoRoleStack": "foxy-role",
+    "CognitoRoleStack": "foxy-dev-role",
     "GitHubLambdaDeployRoleStack": "foxy-dev-github-lambda-deploy-role",
     "GitHubLambdaExecutionRoleStack": "foxy-dev-github-lambda-execution-role",
     "UserPoolStack": "foxy-dev-user-pool",
