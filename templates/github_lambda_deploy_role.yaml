@@ -54,6 +54,7 @@ Resources:
               - lambda:DeleteEventSourceMapping
               - lambda:ListEventSourceMappings
               - lambda:TagResource
+              - lambda:GetPolicy
               - lambda:AddPermission
               - lambda:RemovePermission
             Resource: "arn:aws:lambda:eu-north-1:971422686568:function:foxy-*"
