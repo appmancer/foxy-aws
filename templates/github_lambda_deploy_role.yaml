@@ -61,6 +61,10 @@ Resources:
               - arn:aws:lambda:eu-north-1:971422686568:function:foxy-*
               - arn:aws:sqs:eu-north-1:971422686568:Foxy-dev-*
               - arn:aws:lambda:eu-north-1:971422686568:event-source-mapping:*
+          - Effect: Allow
+            Action:
+              - lambda:ListEventSourceMappings
+            Resource: "*"
        
           - Effect: Allow
             Action:
