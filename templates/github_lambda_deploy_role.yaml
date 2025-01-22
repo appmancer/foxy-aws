@@ -74,6 +74,10 @@ Resources:
               - cloudformation:DeleteStack
               - cloudformation:UpdateStack
               - cloudformation:ListStackResources
+              - cloudformation:CreateChangeSet
+              - cloudformation:DescribeChangeSet
+              - cloudformation:ExecuteChangeSet
+              - cloudformation:DeleteChangeSet
             Resource: "*"
        
           - Effect: Allow
