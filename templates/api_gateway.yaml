@@ -91,15 +91,45 @@ Resources:
         IntegrationHttpMethod: POST
         Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CustomAuthLambdaArn}/invocations
 
-  # Deployment
+  # Public /status Endpoint
+  StatusResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref FoxyApiGateway
+      ParentId: !GetAtt FoxyApiGateway.RootResourceId
+      PathPart: status
+
+  StatusGetMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref FoxyApiGateway
+      ResourceId: !Ref StatusResource
+      HttpMethod: GET
+      AuthorizationType: NONE  # Status should always be public
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:PLACEHOLDER/invocations
+
+  # Deployment with Observability Enhancements
   ApiDeployment:
     Type: AWS::ApiGateway::Deployment
     DependsOn:
       - ProxyMethod
       - AuthPostMethod
+      - RefreshPostMethod
+      - StatusGetMethod
     Properties:
       RestApiId: !Ref FoxyApiGateway
       StageName: !Ref EnvironmentName
+      AccessLogSetting:
+        DestinationArn: !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/api-gateway/foxy-${EnvironmentName}-logs"
+        Format: '{"requestId":"$context.requestId","ip":"$context.identity.sourceIp","userAgent":"$context.identity.userAgent","requestTime":"$context.requestTime","httpMethod":"$context.httpMethod","routeKey":"$context.routeKey","status":"$context.status","integrationLatency":"$context.integrationLatency","responseLength":"$context.responseLength","awsRequestId":"$context.requestId"}'
+      MethodSettings:
+        - DataTraceEnabled: true
+          HttpMethod: "*"
+          LoggingLevel: INFO
+          ResourcePath: "/*"
 
 Outputs:
   ApiGatewayUrl:
@@ -109,4 +139,8 @@ Outputs:
   CustomAuthLambdaArn:
     Description: "ARN of the Custom Auth Lambda"
     Value: !Ref CustomAuthLambdaArn
+
+  LogGroup:
+    Description: "CloudWatch Log Group for API Gateway"
+    Value: !Sub "/aws/api-gateway/foxy-${EnvironmentName}-logs"
 

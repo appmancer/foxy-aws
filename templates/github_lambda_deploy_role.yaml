@@ -66,6 +66,15 @@ Resources:
               - lambda:ListEventSourceMappings
               - lambda:UpdateEventSourceMapping
             Resource: "*"
+            
+          - Effect: Allow
+            Action:
+              - cloudformation:DescribeStacks
+              - cloudformation:CreateStack
+              - cloudformation:DeleteStack
+              - cloudformation:UpdateStack
+              - cloudformation:ListStackResources
+            Resource: "*"
        
           - Effect: Allow
             Action:
