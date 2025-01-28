@@ -220,6 +220,38 @@ for ROLE in "${ROLE_NAMES[@]}"; do
     echo "Role $ROLE does not exist. Skipping..."
   fi
 done
+
+# Catch-all backup for removing log groups - shouldn't really be needed
+# TODO: test and delete
+echo "Deleting log groups..."
+# Define the search pattern
+PATTERN="foxy-${ENVIRONMENT_NAME}"
+
+# Get the list of log groups matching the pattern
+LOG_GROUPS=$(aws logs describe-log-groups \
+  --query "logGroups[?contains(logGroupName, '${PATTERN}')].logGroupName" \
+  --output text --region eu-north-1)
+
+# Check if any log groups are found
+if [ -z "$LOG_GROUPS" ]; then
+  echo "No log groups found matching pattern '${PATTERN}'."
+else
+  echo "Found the following log groups:"
+  echo "$LOG_GROUPS"
+
+  # Loop through each log group and delete it
+  for LOG_GROUP in $LOG_GROUPS; do
+    echo "Deleting log group: $LOG_GROUP"
+    aws logs delete-log-group --log-group-name "$LOG_GROUP" --region eu-north-1
+    if [ $? -eq 0 ]; then
+      echo "Successfully deleted log group: $LOG_GROUP"
+    else
+      echo "Failed to delete log group: $LOG_GROUP"
+    fi
+  done
+fi
+echo "Complete..."
+
 if [ -n "$CUSTOM_AUTH_STACK" ]; then
   delete_stack $CUSTOM_AUTH_STACK
 fi
@@ -230,6 +262,16 @@ if [ -n "$QUEUE_STACK" ]; then
   delete_stack $QUEUE_STACK
 fi
 if [ -n "$API_GATEWAY_STACK" ]; then
+
+  REST_API_ID=$(aws apigateway get-rest-apis --query "items[?name=='foxy-${ENVIRONMENT_NAME}-api'].id" --output text --region eu-north-1)
+
+  if [ -n "$REST_API_ID" ]; then
+    echo "Deleting API Gateway Stage $ENVIRONMENT_NAME for REST API $REST_API_ID"
+	  aws apigateway delete-stage --rest-api-id "$REST_API_ID" --stage-name "$ENVIRONMENT_NAME" --region eu-north-1
+	else
+	  echo "API Gateway REST API not found for Stage $ENVIRONMENT_NAME"
+	fi
+
   delete_stack $API_GATEWAY_STACK
 fi
 

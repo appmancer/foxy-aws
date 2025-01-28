@@ -11,7 +11,12 @@ Parameters:
     Description: ARN of the Custom Auth Lambda
 
 Resources:
-
+  ApiGatewayLogs:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/api-gateway/foxy-${EnvironmentName}-api-logs"
+      RetentionInDays: 30
+      
   # API Gateway
   FoxyApiGateway:
     Type: AWS::ApiGateway::RestApi
@@ -131,7 +136,7 @@ Resources:
       RestApiId: !Ref FoxyApiGateway
       DeploymentId: !Ref ApiDeployment
       AccessLogSetting:
-        DestinationArn: !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/api-gateway/foxy-${EnvironmentName}-logs"
+        DestinationArn: !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/api-gateway/foxy-${EnvironmentName}-api-logs"
         Format: '{"requestId":"$context.requestId","ip":"$context.identity.sourceIp","userAgent":"$context.identity.userAgent","requestTime":"$context.requestTime","httpMethod":"$context.httpMethod","routeKey":"$context.routeKey","status":"$context.status","integrationLatency":"$context.integrationLatency","responseLength":"$context.responseLength","awsRequestId":"$context.requestId"}'
       MethodSettings:
         - DataTraceEnabled: true
@@ -150,5 +155,5 @@ Outputs:
 
   LogGroup:
     Description: "CloudWatch Log Group for API Gateway"
-    Value: !Sub "/aws/api-gateway/foxy-${EnvironmentName}-logs"
+    Value: !Sub "/aws/api-gateway/foxy-${EnvironmentName}-api-logs"
 
