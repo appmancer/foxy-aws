@@ -79,7 +79,7 @@ Resources:
           AttributeDataType: "String"
           Mutable: true
           Required: false
-        - Name: "custom:transaction_limit"
+        - Name: "custom:tx_limit"
           AttributeDataType: "Number"
           Mutable: true
           Required: false
