@@ -70,6 +70,31 @@ Resources:
           StringAttributeConstraints:
             MinLength: "42"
             MaxLength: "42"
+        # Add custom attributes here
+        - Name: "custom:role"
+          AttributeDataType: "String"
+          Mutable: true
+          Required: false
+        - Name: "custom:kyc_level"
+          AttributeDataType: "String"
+          Mutable: true
+          Required: false
+        - Name: "custom:transaction_limit"
+          AttributeDataType: "Number"
+          Mutable: true
+          Required: false
+        - Name: "custom:daily_limit"
+          AttributeDataType: "Number"
+          Mutable: true
+          Required: false
+        - Name: "custom:monthly_limit"
+          AttributeDataType: "Number"
+          Mutable: true
+          Required: false
+        - Name: "custom:is_suspended"
+          AttributeDataType: "Boolean"
+          Mutable: true
+          Required: false
       Policies:
         PasswordPolicy:
           MinimumLength: 8
