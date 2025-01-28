@@ -135,9 +135,9 @@ Resources:
         Format: '{"requestId":"$context.requestId","ip":"$context.identity.sourceIp","userAgent":"$context.identity.userAgent","requestTime":"$context.requestTime","httpMethod":"$context.httpMethod","routeKey":"$context.routeKey","status":"$context.status","integrationLatency":"$context.integrationLatency","responseLength":"$context.responseLength","awsRequestId":"$context.requestId"}'
       MethodSettings:
         - DataTraceEnabled: true
-	  HttpMethod: "*"
-    	  LoggingLevel: INFO
-	  ResourcePath: "/*"
+          HttpMethod: "*"
+          LoggingLevel: INFO
+          ResourcePath: "/*"
 
 Outputs:
   ApiGatewayUrl:
