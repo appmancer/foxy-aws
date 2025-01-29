@@ -9,6 +9,10 @@ Parameters:
   CustomAuthLambdaArn:
     Type: String
     Description: ARN of the Custom Auth Lambda
+    
+  DeploymentTimestamp:
+    Type: String
+    Description: Timestamp for the deployment
 
 Resources:
   ApiGatewayLogs:
@@ -127,6 +131,7 @@ Resources:
     Properties:
       RestApiId: !Ref FoxyApiGateway
       StageName: !Ref EnvironmentName
+      Description: !Sub "Deployment ${AWS::StackName} - ${AWS::Region} - ${AWS::AccountId} - ${EnvironmentName} - ${DeploymentTimestamp}"
 
   # Define a Stage with AccessLogSetting and MethodSettings
   ApiStage:
@@ -155,4 +160,4 @@ Outputs:
 
   LogGroup:
     Description: "CloudWatch Log Group for API Gateway"
-    DeValue: !Sub "/aws/api-gateway/foxy-${EnvironmentName}-api-logs"
+    Value: !Sub "/aws/api-gateway/foxy-${EnvironmentName}-api-logs"
