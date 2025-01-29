@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: CloudFormation stack to deploy API Gateway with Custom Lambda Authorizer and Wildcard Proxy Integration for Foxy.
-
+Description: CloudFormation stack to deploy API Gateway with Custom Lambda Authorizer and Wildcard Proxy Integration for Foxy. UTF-8
+# This is a comment with an é character.
 Parameters:
   EnvironmentName:
     Type: String
