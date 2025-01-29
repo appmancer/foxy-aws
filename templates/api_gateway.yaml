@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: CloudFormation stack to deploy API Gateway with Custom Lambda Authorizer and Wildcard Proxy Integration for Foxy. UTF-8
-# This is a comment with an é character.
+
 Parameters:
   EnvironmentName:
     Type: String
@@ -9,10 +9,14 @@ Parameters:
   CustomAuthLambdaArn:
     Type: String
     Description: ARN of the Custom Auth Lambda
-    
+
   DeploymentTimestamp:
     Type: String
     Description: Timestamp for the deployment
+
+  StatusLambdaArn:  # Parameter for the Status Lambda ARN
+    Type: String
+    Description: ARN of the Status Lambda (initially a placeholder)
 
 Resources:
   ApiGatewayLogs:
@@ -20,15 +24,13 @@ Resources:
     Properties:
       LogGroupName: !Sub "/aws/api-gateway/foxy-${EnvironmentName}-api-logs"
       RetentionInDays: 30
-      
-  # API Gateway
+
   FoxyApiGateway:
     Type: AWS::ApiGateway::RestApi
     Properties:
       Name: !Sub "foxy-${EnvironmentName}-api"
       Description: !Sub "API Gateway for Foxy in ${EnvironmentName}"
 
-  # Wildcard Proxy Resource
   ProxyResource:
     Type: AWS::ApiGateway::Resource
     Properties:
@@ -36,7 +38,6 @@ Resources:
       ParentId: !GetAtt FoxyApiGateway.RootResourceId
       PathPart: "{proxy+}"
 
-  # Custom Lambda Authorizer
   FoxyLambdaAuthorizer:
     Type: AWS::ApiGateway::Authorizer
     Properties:
@@ -46,7 +47,6 @@ Resources:
       IdentitySource: method.request.header.Authorization
       RestApiId: !Ref FoxyApiGateway
 
-  # Wildcard Proxy Method with Custom Authorizer
   ProxyMethod:
     Type: AWS::ApiGateway::Method
     Properties:
@@ -59,8 +59,14 @@ Resources:
         Type: AWS_PROXY
         IntegrationHttpMethod: POST
         Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CustomAuthLambdaArn}/invocations
+      MethodResponses: # Added MethodResponses
+        - StatusCode: "200"
+          ResponseModels:
+            "application/json": EmptyModel # Define EmptyModel below if needed
+        - StatusCode: "500"
+          ResponseModels:
+            "application/json": ErrorModel # Define ErrorModel below if needed
 
-  # Public /auth Endpoint
   AuthResource:
     Type: AWS::ApiGateway::Resource
     Properties:
@@ -79,8 +85,14 @@ Resources:
         Type: AWS_PROXY
         IntegrationHttpMethod: POST
         Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CustomAuthLambdaArn}/invocations
+      MethodResponses: # Added MethodResponses
+        - StatusCode: "200"
+          ResponseModels:
+            "application/json": EmptyModel # Define EmptyModel below if needed
+        - StatusCode: "500"
+          ResponseModels:
+            "application/json": ErrorModel # Define ErrorModel below if needed
 
-  # Public /refresh Endpoint
   RefreshResource:
     Type: AWS::ApiGateway::Resource
     Properties:
@@ -94,13 +106,19 @@ Resources:
       RestApiId: !Ref FoxyApiGateway
       ResourceId: !Ref RefreshResource
       HttpMethod: POST
-      AuthorizationType: NONE  # Refresh token should be public (token validated in Lambda)
+      AuthorizationType: NONE
       Integration:
         Type: AWS_PROXY
         IntegrationHttpMethod: POST
         Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CustomAuthLambdaArn}/invocations
+      MethodResponses: # Added MethodResponses
+        - StatusCode: "200"
+          ResponseModels:
+            "application/json": EmptyModel # Define EmptyModel below if needed
+        - StatusCode: "500"
+          ResponseModels:
+            "application/json": ErrorModel # Define ErrorModel below if needed
 
-  # Public /status Endpoint
   StatusResource:
     Type: AWS::ApiGateway::Resource
     Properties:
@@ -114,13 +132,19 @@ Resources:
       RestApiId: !Ref FoxyApiGateway
       ResourceId: !Ref StatusResource
       HttpMethod: GET
-      AuthorizationType: NONE  # Status should always be public
+      AuthorizationType: NONE
       Integration:
         Type: AWS_PROXY
         IntegrationHttpMethod: POST
-        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:PLACEHOLDER/invocations
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${StatusLambdaArn}/invocations # Using the parameter
+      MethodResponses: # Added MethodResponses
+        - StatusCode: "200"
+          ResponseModels:
+            "application/json": EmptyModel # Define EmptyModel below if needed
+        - StatusCode: "500"
+          ResponseModels:
+            "application/json": ErrorModel # Define ErrorModel below if needed
 
-  # Deployment with Observability Enhancements 
   ApiDeployment:
     Type: AWS::ApiGateway::Deployment
     DependsOn:
@@ -130,16 +154,17 @@ Resources:
       - StatusGetMethod
     Properties:
       RestApiId: !Ref FoxyApiGateway
-      StageName: !Ref EnvironmentName
+      StageName: !Ref EnvironmentName # Or use a specific name if you prefer
       Description: !Sub "Deployment ${AWS::StackName} - ${AWS::Region} - ${AWS::AccountId} - ${EnvironmentName} - ${DeploymentTimestamp}"
 
-  # Define a Stage with AccessLogSetting and MethodSettings
   ApiStage:
     Type: AWS::ApiGateway::Stage
+    DependsOn:
+      - ApiDeployment # Critical: Stage depends on Deployment
     Properties:
-      StageName: !Ref EnvironmentName
-      RestApiId: !Ref FoxyApiGateway
-      DeploymentId: !Ref ApiDeployment
+      StageName: !Sub "foxy-${EnvironmentName}-api" # Changed stage name
+      RestApiId: !Ref FoxyApiGateway # Direct reference
+      DeploymentId: !Ref ApiDeployment # Direct reference
       AccessLogSetting:
         DestinationArn: !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/api-gateway/foxy-${EnvironmentName}-api-logs"
         Format: '{"requestId":"$context.requestId","ip":"$context.identity.sourceIp","userAgent":"$context.identity.userAgent","requestTime":"$context.requestTime","httpMethod":"$context.httpMethod","routeKey":"$context.routeKey","status":"$context.status","integrationLatency":"$context.integrationLatency","responseLength":"$context.responseLength","awsRequestId":"$context.requestId"}'
@@ -148,6 +173,25 @@ Resources:
           HttpMethod: "*"
           LoggingLevel: INFO
           ResourcePath: "/*"
+
+  # Define Models (if you're using them)
+  EmptyModel:
+    Type: AWS::ApiGateway::Model
+    Properties:
+      RestApiId: !Ref FoxyApiGateway
+      ContentType: "application/json"
+      Schema: {} # Empty schema
+
+  ErrorModel:
+    Type: AWS::ApiGateway::Model
+    Properties:
+      RestApiId: !Ref FoxyApiGateway
+      ContentType: "application/json"
+      Schema:
+        type: object
+        properties:
+          message:
+            type: string
 
 Outputs:
   ApiGatewayUrl:
