@@ -1,4 +1,4 @@
-chmod +rx /scripts/*
+chmod +rx ./scripts/*
 
 
 ENV=$1

@@ -14,10 +14,6 @@ Parameters:
     Type: String
     Description: Timestamp for the deployment
 
-  StatusLambdaArn:  # Parameter for the Status Lambda ARN
-    Type: String
-    Description: ARN of the Status Lambda (initially a placeholder)
-
 Resources:
   ApiGatewayLogs:
     Type: AWS::Logs::LogGroup
