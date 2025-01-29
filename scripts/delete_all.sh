@@ -99,6 +99,19 @@ ROLE_EXPORT_NAME=$(jq -r '.Parameters[] | select(.ParameterKey=="ExportName") | 
 ROLE_NAME=$(aws cloudformation list-exports --query "Exports[?Name=='${ROLE_EXPORT_NAME}'].Value" --output text)
 
 echo "Removing User Pool..."
+
+# Config might needs to be removed before the user pool can be removed
+if aws cognito-idp describe-user-pool --user-pool-id "$USER_POOL_ID" --region eu-north-1 > /dev/null 2>&1; then
+  echo "User Pool exists. Updating Lambda triggers..."
+  aws cognito-idp update-user-pool \
+    --user-pool-id "$USER_POOL_ID" \
+    --lambda-config "{}"
+else
+  echo "❌ User Pool $USER_POOL_ID does not exist. Skipping update."
+fi
+
+echo "Removed"
+
 # Check if the CloudFormation stack exists
 if aws cloudformation describe-stacks --stack-name "$USER_POOL_STACK" --region "$REGION" > /dev/null 2>&1; then
   USER_POOL_ID=$(aws cloudformation describe-stacks \
@@ -120,17 +133,6 @@ if aws cloudformation describe-stacks --stack-name "$USER_POOL_STACK" --region "
 else
   echo "Warning: CloudFormation stack '$USER_POOL_STACK' does not exist in region '$REGION'. Skipping User Pool deletion."
 fi
-
-if aws cognito-idp describe-user-pool --user-pool-id "$USER_POOL_ID" --region eu-north-1 > /dev/null 2>&1; then
-  echo "User Pool exists. Updating Lambda triggers..."
-  aws cognito-idp update-user-pool \
-    --user-pool-id "$USER_POOL_ID" \
-    --lambda-config "{}"
-else
-  echo "❌ User Pool $USER_POOL_ID does not exist. Skipping update."
-fi
-
-echo "Removed"
 
 # List and delete all event source mappings starting with Foxy-{EnvironmentName}
 echo "Deleting trigges matching 'foxy-${ENVIRONMENT_NAME}*'..."

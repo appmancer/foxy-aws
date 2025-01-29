@@ -22,7 +22,7 @@ Resources:
     Type: AWS::ApiGateway::RestApi
     Properties:
       Name: !Sub "foxy-${EnvironmentName}-api"
-      Description: "API Gateway for Foxy in ${EnvironmentName}"
+      Description: !Sub "API Gateway for Foxy in ${EnvironmentName}"
 
   # Wildcard Proxy Resource
   ProxyResource:
@@ -155,5 +155,4 @@ Outputs:
 
   LogGroup:
     Description: "CloudWatch Log Group for API Gateway"
-    Value: !Sub "/aws/api-gateway/foxy-${EnvironmentName}-api-logs"
-
+    DeValue: !Sub "/aws/api-gateway/foxy-${EnvironmentName}-api-logs"
