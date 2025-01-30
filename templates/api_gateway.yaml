@@ -45,10 +45,7 @@ Resources:
 
   ProxyMethod:
     Type: AWS::ApiGateway::Method
-    DependsOn:
-      - EmptyModel
-      - ErrorModel
-    Properties:
+    Properties:  # Removed DependsOn and MethodResponses
       RestApiId: !Ref FoxyApiGateway
       ResourceId: !Ref ProxyResource
       HttpMethod: ANY
@@ -58,13 +55,6 @@ Resources:
         Type: AWS_PROXY
         IntegrationHttpMethod: POST
         Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CustomAuthLambdaArn}/invocations
-      MethodResponses: # Added MethodResponses
-        - StatusCode: "200"
-          ResponseModels:
-            "application/json": EmptyModel # Define EmptyModel below if needed
-        - StatusCode: "500"
-          ResponseModels:
-            "application/json": ErrorModel # Define ErrorModel below if needed
 
   AuthResource:
     Type: AWS::ApiGateway::Resource
@@ -75,10 +65,7 @@ Resources:
 
   AuthPostMethod:
     Type: AWS::ApiGateway::Method
-    DependsOn:
-      - EmptyModel
-      - ErrorModel
-    Properties:
+    Properties:  # Removed DependsOn and MethodResponses
       RestApiId: !Ref FoxyApiGateway
       ResourceId: !Ref AuthResource
       HttpMethod: POST
@@ -87,13 +74,6 @@ Resources:
         Type: AWS_PROXY
         IntegrationHttpMethod: POST
         Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CustomAuthLambdaArn}/invocations
-      MethodResponses: # Added MethodResponses
-        - StatusCode: "200"
-          ResponseModels:
-            "application/json": EmptyModel # Define EmptyModel below if needed
-        - StatusCode: "500"
-          ResponseModels:
-            "application/json": ErrorModel # Define ErrorModel below if needed
 
   RefreshResource:
     Type: AWS::ApiGateway::Resource
@@ -104,10 +84,7 @@ Resources:
 
   RefreshPostMethod:
     Type: AWS::ApiGateway::Method
-    DependsOn:
-      - EmptyModel
-      - ErrorModel
-    Properties:
+    Properties:  # Removed DependsOn and MethodResponses
       RestApiId: !Ref FoxyApiGateway
       ResourceId: !Ref RefreshResource
       HttpMethod: POST
@@ -116,13 +93,6 @@ Resources:
         Type: AWS_PROXY
         IntegrationHttpMethod: POST
         Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CustomAuthLambdaArn}/invocations
-      MethodResponses: # Added MethodResponses
-        - StatusCode: "200"
-          ResponseModels:
-            "application/json": EmptyModel # Define EmptyModel below if needed
-        - StatusCode: "500"
-          ResponseModels:
-            "application/json": ErrorModel # Define ErrorModel below if needed
 
   StatusResource:
     Type: AWS::ApiGateway::Resource
@@ -133,10 +103,7 @@ Resources:
 
   StatusGetMethod:
     Type: AWS::ApiGateway::Method
-    DependsOn:
-      - EmptyModel
-      - ErrorModel
-    Properties:
+    Properties:  # Removed DependsOn and MethodResponses
       RestApiId: !Ref FoxyApiGateway
       ResourceId: !Ref StatusResource
       HttpMethod: GET
@@ -145,13 +112,6 @@ Resources:
         Type: AWS_PROXY
         IntegrationHttpMethod: POST
         Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:PLACEHOLDER/invocations
-      MethodResponses: # Added MethodResponses
-        - StatusCode: "200"
-          ResponseModels:
-            "application/json": EmptyModel # Define EmptyModel below if needed
-        - StatusCode: "500"
-          ResponseModels:
-            "application/json": ErrorModel # Define ErrorModel below if needed
 
   ApiDeployment:
     Type: AWS::ApiGateway::Deployment
@@ -162,17 +122,17 @@ Resources:
       - StatusGetMethod
     Properties:
       RestApiId: !Ref FoxyApiGateway
-      StageName: !Ref EnvironmentName # Or use a specific name if you prefer
+      StageName: !Ref EnvironmentName
       Description: !Sub "Deployment ${AWS::StackName} - ${AWS::Region} - ${AWS::AccountId} - ${EnvironmentName} - ${DeploymentTimestamp}"
 
   ApiStage:
     Type: AWS::ApiGateway::Stage
     DependsOn:
-      - ApiDeployment # Critical: Stage depends on Deployment
+      - ApiDeployment
     Properties:
-      StageName: !Sub "foxy-${EnvironmentName}-api" # Changed stage name
-      RestApiId: !Ref FoxyApiGateway # Direct reference
-      DeploymentId: !Ref ApiDeployment # Direct reference
+      StageName: !Sub "foxy-${EnvironmentName}-api"
+      RestApiId: !Ref FoxyApiGateway
+      DeploymentId: !Ref ApiDeployment
       AccessLogSetting:
         DestinationArn: !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/api-gateway/foxy-${EnvironmentName}-api-logs"
         Format: '{"requestId":"$context.requestId","ip":"$context.identity.sourceIp","userAgent":"$context.identity.userAgent","requestTime":"$context.requestTime","httpMethod":"$context.httpMethod","routeKey":"$context.routeKey","status":"$context.status","integrationLatency":"$context.integrationLatency","responseLength":"$context.responseLength","awsRequestId":"$context.requestId"}'
@@ -181,25 +141,6 @@ Resources:
           HttpMethod: "*"
           LoggingLevel: INFO
           ResourcePath: "/*"
-
-  # Define Models (if you're using them)
-  EmptyModel:
-    Type: AWS::ApiGateway::Model
-    Properties:
-      RestApiId: !Ref FoxyApiGateway
-      ContentType: "application/json"
-      Schema: {} # Empty schema
-
-  ErrorModel:
-    Type: AWS::ApiGateway::Model
-    Properties:
-      RestApiId: !Ref FoxyApiGateway
-      ContentType: "application/json"
-      Schema:
-        type: object
-        properties:
-          message:
-            type: string
 
 Outputs:
   ApiGatewayUrl:
