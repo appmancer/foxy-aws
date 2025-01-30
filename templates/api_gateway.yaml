@@ -45,6 +45,9 @@ Resources:
 
   ProxyMethod:
     Type: AWS::ApiGateway::Method
+    DependsOn:
+      - EmptyModel
+      - ErrorModel
     Properties:
       RestApiId: !Ref FoxyApiGateway
       ResourceId: !Ref ProxyResource
@@ -72,6 +75,9 @@ Resources:
 
   AuthPostMethod:
     Type: AWS::ApiGateway::Method
+    DependsOn:
+      - EmptyModel
+      - ErrorModel
     Properties:
       RestApiId: !Ref FoxyApiGateway
       ResourceId: !Ref AuthResource
@@ -98,6 +104,9 @@ Resources:
 
   RefreshPostMethod:
     Type: AWS::ApiGateway::Method
+    DependsOn:
+      - EmptyModel
+      - ErrorModel
     Properties:
       RestApiId: !Ref FoxyApiGateway
       ResourceId: !Ref RefreshResource
@@ -124,6 +133,9 @@ Resources:
 
   StatusGetMethod:
     Type: AWS::ApiGateway::Method
+    DependsOn:
+      - EmptyModel
+      - ErrorModel
     Properties:
       RestApiId: !Ref FoxyApiGateway
       ResourceId: !Ref StatusResource
