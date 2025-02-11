@@ -70,6 +70,7 @@ Resources:
           - Effect: Allow
             Action:
               - cloudformation:DescribeStacks
+              - cloudformation:GetTemplateSummary
               - cloudformation:CreateStack
               - cloudformation:DeleteStack
               - cloudformation:UpdateStack
