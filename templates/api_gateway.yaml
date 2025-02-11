@@ -130,7 +130,7 @@ Resources:
     DependsOn:
       - ApiDeployment
     Properties:
-      StageName: !Sub "foxy-${EnvironmentName}-api"
+      StageName: !Ref EnvironmentName
       RestApiId: !Ref FoxyApiGateway
       DeploymentId: !Ref ApiDeployment
       AccessLogSetting:
