@@ -122,7 +122,6 @@ Resources:
       - StatusGetMethod
     Properties:
       RestApiId: !Ref FoxyApiGateway
-      StageName: !Ref EnvironmentName
       Description: !Sub "Deployment ${AWS::StackName} - ${AWS::Region} - ${AWS::AccountId} - ${EnvironmentName} - ${DeploymentTimestamp}"
 
   ApiStage:
@@ -133,6 +132,7 @@ Resources:
       StageName: !Ref EnvironmentName
       RestApiId: !Ref FoxyApiGateway
       DeploymentId: !Ref ApiDeployment
+      Description: !Sub "Stage ${AWS::StackName} - ${AWS::Region} - ${AWS::AccountId} - ${EnvironmentName} - ${DeploymentTimestamp}"
       AccessLogSetting:
         DestinationArn: !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/api-gateway/foxy-${EnvironmentName}-api-logs"
         Format: '{"requestId":"$context.requestId","ip":"$context.identity.sourceIp","userAgent":"$context.identity.userAgent","requestTime":"$context.requestTime","httpMethod":"$context.httpMethod","routeKey":"$context.routeKey","status":"$context.status","integrationLatency":"$context.integrationLatency","responseLength":"$context.responseLength","awsRequestId":"$context.requestId"}'
