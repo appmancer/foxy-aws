@@ -65,7 +65,8 @@ Resources:
               - lambda:DeleteEventSourceMapping
               - lambda:ListEventSourceMappings
               - lambda:UpdateEventSourceMapping
-            Resource: "*"
+            Resource: 
+              - !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:event-source-mapping/*"
             
           - Effect: Allow
             Action:
