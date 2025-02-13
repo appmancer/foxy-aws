@@ -86,7 +86,8 @@ Resources:
               - logs:CreateLogGroup
               - logs:CreateLogStream
               - logs:PutLogEvents
-            Resource: !Sub "arn:aws:logs:eu-north-1:${AWS::AccountId}:log-group:/aws/lambda/Foxy-${EnvironmentName}-*:*"
+              - logs:PutRetentionPolicy
+            Resource: !Sub "arn:aws:logs:eu-north-1:${AWS::AccountId}:log-group:/aws/lambda/Foxy-${EnvironmentName}-*"
 
           - Effect: Allow
             Action:
