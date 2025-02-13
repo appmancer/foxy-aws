@@ -96,7 +96,7 @@ Resources:
             Resource:
               - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*"
               - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/Foxy-${EnvironmentName}-*"
-              - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${BasicValidatorLambdaArn}"
+              - !Sub "arn:aws:lambda:eu-north-1:971422686568:function:foxy-${EnvironmentName}-basic-validation"
 
           - Effect: Allow
             Action:
