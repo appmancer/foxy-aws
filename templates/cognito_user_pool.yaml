@@ -63,6 +63,7 @@ Resources:
           AttributeDataType: "String"
           Mutable: true
           Required: false
+        # Add custom attributes here
         - Name: "wallet_address"
           AttributeDataType: "String"
           Mutable: true
@@ -70,6 +71,30 @@ Resources:
           StringAttributeConstraints:
             MinLength: "42"
             MaxLength: "42"
+        - Name: "role"
+          AttributeDataType: "String"
+          Mutable: true
+          Required: false
+        - Name: "kyc_level"
+          AttributeDataType: "String"
+          Mutable: true
+          Required: false
+        - Name: "tx_limit"
+          AttributeDataType: "Number"
+          Mutable: true
+          Required: false
+        - Name: "daily_limit"
+          AttributeDataType: "Number"
+          Mutable: true
+          Required: false
+        - Name: "monthly_limit"
+          AttributeDataType: "Number"
+          Mutable: true
+          Required: false
+        - Name: "is_suspended"
+          AttributeDataType: "Boolean"
+          Mutable: true
+          Required: false
       Policies:
         PasswordPolicy:
           MinimumLength: 8

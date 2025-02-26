@@ -74,4 +74,10 @@ Outputs:
   LambdaRoleArn:
     Description: "ARN of the IAM Role for Lambda to access SQS"
     Value: !GetAtt FoxyLambdaSQSRole.Arn
-
+    
+  TransactionBroadcastQueueArn:
+    Description: ARN of the Transaction Broadcast Queue
+    Value: !GetAtt TransactionBroadcastQueue.Arn
+    Export:
+      Name: !Sub "${EnvironmentName}-TransactionBroadcastQueueArn"
+    

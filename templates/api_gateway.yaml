@@ -1,0 +1,156 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: CloudFormation stack to deploy API Gateway with Custom Lambda Authorizer and Wildcard Proxy Integration for Foxy. UTF-8
+
+Parameters:
+  EnvironmentName:
+    Type: String
+    Description: Environment (dev, staging, prod)
+
+  CustomAuthLambdaArn:
+    Type: String
+    Description: ARN of the Custom Auth Lambda
+
+  DeploymentTimestamp:
+    Type: String
+    Description: Timestamp for the deployment
+
+Resources:
+  ApiGatewayLogs:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/api-gateway/foxy-${EnvironmentName}-api-logs"
+      RetentionInDays: 30
+
+  FoxyApiGateway:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: !Sub "foxy-${EnvironmentName}-api"
+      Description: !Sub "API Gateway for Foxy in ${EnvironmentName}"
+
+  ProxyResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref FoxyApiGateway
+      ParentId: !GetAtt FoxyApiGateway.RootResourceId
+      PathPart: "{proxy+}"
+
+  FoxyLambdaAuthorizer:
+    Type: AWS::ApiGateway::Authorizer
+    Properties:
+      Name: !Sub "foxy-${EnvironmentName}-lambda-auth"
+      Type: REQUEST
+      AuthorizerUri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CustomAuthLambdaArn}/invocations
+      IdentitySource: method.request.header.Authorization
+      RestApiId: !Ref FoxyApiGateway
+
+  ProxyMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:  # Removed DependsOn and MethodResponses
+      RestApiId: !Ref FoxyApiGateway
+      ResourceId: !Ref ProxyResource
+      HttpMethod: ANY
+      AuthorizationType: CUSTOM
+      AuthorizerId: !Ref FoxyLambdaAuthorizer
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CustomAuthLambdaArn}/invocations
+
+  AuthResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref FoxyApiGateway
+      ParentId: !GetAtt FoxyApiGateway.RootResourceId
+      PathPart: auth
+
+  AuthPostMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:  # Removed DependsOn and MethodResponses
+      RestApiId: !Ref FoxyApiGateway
+      ResourceId: !Ref AuthResource
+      HttpMethod: POST
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CustomAuthLambdaArn}/invocations
+
+  RefreshResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref FoxyApiGateway
+      ParentId: !GetAtt FoxyApiGateway.RootResourceId
+      PathPart: refresh
+
+  RefreshPostMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:  # Removed DependsOn and MethodResponses
+      RestApiId: !Ref FoxyApiGateway
+      ResourceId: !Ref RefreshResource
+      HttpMethod: POST
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CustomAuthLambdaArn}/invocations
+
+  StatusResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref FoxyApiGateway
+      ParentId: !GetAtt FoxyApiGateway.RootResourceId
+      PathPart: status
+
+  StatusGetMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:  # Removed DependsOn and MethodResponses
+      RestApiId: !Ref FoxyApiGateway
+      ResourceId: !Ref StatusResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:PLACEHOLDER/invocations
+
+  ApiDeployment:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn:
+      - ProxyMethod
+      - AuthPostMethod
+      - RefreshPostMethod
+      - StatusGetMethod
+    Properties:
+      RestApiId: !Ref FoxyApiGateway
+      Description: !Sub "Deployment ${AWS::StackName} - ${AWS::Region} - ${AWS::AccountId} - ${EnvironmentName} - ${DeploymentTimestamp}"
+
+  ApiStage:
+    Type: AWS::ApiGateway::Stage
+    DependsOn:
+      - ApiDeployment
+    Properties:
+      StageName: !Ref EnvironmentName
+      RestApiId: !Ref FoxyApiGateway
+      DeploymentId: !Ref ApiDeployment
+      Description: !Sub "Stage ${AWS::StackName} - ${AWS::Region} - ${AWS::AccountId} - ${EnvironmentName} - ${DeploymentTimestamp}"
+      AccessLogSetting:
+        DestinationArn: !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/api-gateway/foxy-${EnvironmentName}-api-logs"
+        Format: '{"requestId":"$context.requestId","ip":"$context.identity.sourceIp","userAgent":"$context.identity.userAgent","requestTime":"$context.requestTime","httpMethod":"$context.httpMethod","routeKey":"$context.routeKey","status":"$context.status","integrationLatency":"$context.integrationLatency","responseLength":"$context.responseLength","awsRequestId":"$context.requestId"}'
+      MethodSettings:
+        - DataTraceEnabled: true
+          HttpMethod: "*"
+          LoggingLevel: INFO
+          ResourcePath: "/*"
+
+Outputs:
+  ApiGatewayUrl:
+    Description: "API Gateway Invoke URL"
+    Value: !Sub "https://${FoxyApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${EnvironmentName}"
+
+  CustomAuthLambdaArn:
+    Description: "ARN of the Custom Auth Lambda"
+    Value: !Ref CustomAuthLambdaArn
+
+  LogGroup:
+    Description: "CloudWatch Log Group for API Gateway"
+    Value: !Sub "/aws/api-gateway/foxy-${EnvironmentName}-api-logs"

@@ -3,15 +3,16 @@
   "Region": "eu-north-1",
   "Account": 971422686568,
   "Stacks": {
-    "CognitoRoleStack": "foxy-role",
+    "CognitoRoleStack": "foxy-dev-role",
     "GitHubLambdaDeployRoleStack": "foxy-dev-github-lambda-deploy-role",
     "GitHubLambdaExecutionRoleStack": "foxy-dev-github-lambda-execution-role",
-    "UserPoolStack": "foxy-dev",
-    "ServiceAccountStack": "foxy-service-accounts",
+    "UserPoolStack": "foxy-dev-user-pool",
+    "ServiceAccountStack": "foxy-dev-service-accounts",
     "DatabaseStack": "foxy-dev-dynamodb",
     "QueueStack": "foxy-dev-queues",
     "CustomAuthStack": "foxy-dev-custom-auth",
-    "S3BucketStack": "foxy-dev-s3-buckets"
+    "S3BucketStack": "foxy-dev-s3-buckets",
+    "APIGatewayStack": "foxy-dev-api-gateway"
   },
   "Parameters": [
     {

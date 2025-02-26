@@ -50,17 +50,53 @@ Resources:
               - lambda:InvokeFunction
               - lambda:DeleteFunction
               - lambda:GetFunction
+              - lambda:TagResource
+              - lambda:GetPolicy
+              - lambda:AddPermission
+              - lambda:RemovePermission
+            Resource:
+              - arn:aws:lambda:eu-north-1:971422686568:function:foxy-*
+              - arn:aws:sqs:eu-north-1:971422686568:Foxy-dev-*
+              - arn:aws:lambda:eu-north-1:971422686568:event-source-mapping:*
+              
+          - Effect: Allow
+            Action:
               - lambda:CreateEventSourceMapping
               - lambda:DeleteEventSourceMapping
               - lambda:ListEventSourceMappings
+              - lambda:UpdateEventSourceMapping
+              - lambda:GetEventSourceMapping
+              - lambda:GetFunctionConfiguration
+              - lambda:EnableEventSourceMapping
+              - lambda:DisableEventSourceMapping
+            Resource:
+              - arn:aws:lambda:eu-north-1:971422686568:event-source-mapping:*
+              - "*"
+            
+          - Effect: Allow
+            Action:
+              - cloudformation:DescribeStacks
+              - cloudformation:GetTemplateSummary
+              - cloudformation:CreateStack
+              - cloudformation:DeleteStack
+              - cloudformation:UpdateStack
+              - cloudformation:ListStackResources
+              - cloudformation:CreateChangeSet
+              - cloudformation:DescribeChangeSet
+              - cloudformation:ExecuteChangeSet
+              - cloudformation:DeleteChangeSet
             Resource: "*"
-
+       
           - Effect: Allow
             Action:
               - logs:CreateLogGroup
               - logs:CreateLogStream
               - logs:PutLogEvents
-            Resource: !Sub "arn:aws:logs:eu-north-1:${AWS::AccountId}:log-group:/aws/lambda/Foxy-${EnvironmentName}-*:*"
+              - logs:PutRetentionPolicy
+            Resource:
+              - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*"
+              - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/Foxy-${EnvironmentName}-*"
+              - !Sub "arn:aws:lambda:eu-north-1:971422686568:function:foxy-${EnvironmentName}-basic-validation"
 
           - Effect: Allow
             Action:
@@ -77,12 +113,30 @@ Resources:
               - sqs:ChangeMessageVisibility
               - sqs:ListQueues 
             Resource: "*"
+            
+          - Effect: Allow
+            Action:
+              - apigateway:GET
+              - apigateway:GETRestApis
+            Resource: "*"
+            
+          - Effect: Allow
+            Action:
+              - apigateway:POST
+              - apigateway:PUT
+              - apigateway:PATCH
+              - apigateway:DELETE
+              - apigateway:GET
+            Resource: 
+              - "arn:aws:apigateway:eu-north-1::/restapis/*"
+              - "arn:aws:apigateway:eu-north-1::/restapis/*/resources/*"
 
           - Effect: Allow
             Action:
               - iam:PassRole
-            Resource: !Sub "arn:aws:iam::971422686568:role/Foxy-${EnvironmentName}-GitHub-Lambda-ExecutionRole"
-
+            Resource:
+              - !Sub "arn:aws:iam::971422686568:role/Foxy-${EnvironmentName}-GitHub-Lambda-Deploy-Role"
+              - !Sub "arn:aws:iam::971422686568:role/Foxy-${EnvironmentName}-GitHub-Lambda-ExecutionRole"
 Outputs:
   GitHubLambdaDeployRoleArn:
     Description: ARN of the IAM Role for GitHub Actions to deploy Lambdas.

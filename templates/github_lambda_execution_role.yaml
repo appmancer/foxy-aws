@@ -26,13 +26,6 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                  - dynamodb:PutItem
-                  - dynamodb:UpdateItem
-                  - dynamodb:GetItem
-                Resource: !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/Foxy-${EnvironmentName}-TransactionEventLogTable"
-
-              - Effect: Allow
-                Action:
                   - sqs:SendMessage
                   - sqs:ReceiveMessage
                   - sqs:GetQueueAttributes
@@ -46,7 +39,16 @@ Resources:
                   - logs:CreateLogGroup
                   - logs:CreateLogStream
                   - logs:PutLogEvents
-                Resource: !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/Foxy-${EnvironmentName}-*"
+                  - logs:DescribeLogStreams
+                Resource: !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*"
+
+              - Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                  - lambda:InvokeAsync
+                  - lambda:GetFunction
+                  - lambda:UpdateFunctionCode
+                Resource: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:Foxy-${EnvironmentName}-*"
 
 Outputs:
   LambdaExecutionRoleArn:

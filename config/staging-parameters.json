@@ -1,11 +1,19 @@
 {
   "Environment": "Staging",
   "Region": "eu-north-1",
+  "Account": 971422686568,
   "Stacks": {
-    "RoleStack": "foxy-staging-role",
-    "UserPoolStack": "foxy-staging",
-    "ServiceAccountStack": null
-  },
+    "CognitoRoleStack": "foxy-staging-role",
+    "GitHubLambdaDeployRoleStack": "foxy-staging-github-lambda-deploy-role",
+    "GitHubLambdaExecutionRoleStack": "foxy-staging-github-lambda-execution-role",
+    "UserPoolStack": "foxy-staging-user-pool",
+    "ServiceAccountStack": "foxy-staging-service-accounts",
+    "DatabaseStack": "foxy-staging-dynamodb",
+    "QueueStack": "foxy-staging-queues",
+    "CustomAuthStack": "foxy-staging-custom-auth",
+    "S3BucketStack": "foxy-staging-s3-buckets",
+    "APIGatewayStack": "foxy-staging-api-gateway"
+  },	
   "Parameters": [
     {
       "ParameterKey": "EnvironmentName",
@@ -14,7 +22,15 @@
     {
       "ParameterKey": "CognitoUserPoolName",
       "ParameterValue": "FoxyStagingUserPool"
+    },
+    {
+      "ParameterKey": "ExportName",
+      "ParameterValue": "Foxy-staging-Cognito-Lambda-ExecutionRoleName"
+    },
+    {
+      "ParameterKey": "GitHubOrg",
+      "ParameterValue": "appmancer"
     }
-  ],
-  "RoleExportName": "staging-CognitoLambdaExecutionRoleName"
+  ]
 }
+
