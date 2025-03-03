@@ -92,22 +92,24 @@ if [ $? -ne 0 ]; then
   echo "Failed to deploy CognitoRoleStack stack. Exiting."
   exit 1
 fi
-echo "Deploying GitHub Lambda Deployment Role Stack..."
+
+# These next two function support creating roles for deploying and executing microservices
+# echo "Deploying GitHub Lambda Deployment Role Stack..."
 # This is the role used to deploy the lambda functions
-deploy_stack GitHubLambdaDeployRoleStack templates/github_lambda_deploy_role.yaml $CONFIG_FILE
-if [ $? -ne 0 ]; then
-  echo "Failed to deploy GitHubLambdaDeployRoleStack stack. Exiting."
-  exit 1
-fi
-echo "Complete"
-echo "Deploying GitHub Lambda Execution Role Stack..."
+# deploy_stack GitHubLambdaDeployRoleStack templates/github_lambda_deploy_role.yaml $CONFIG_FILE
+# if [ $? -ne 0 ]; then
+#  echo "Failed to deploy GitHubLambdaDeployRoleStack stack. Exiting."
+#  exit 1
+# fi
+# echo "Complete"
+# echo "Deploying GitHub Lambda Execution Role Stack..."
 # This is the role that the lambda functions for transactions (validation, broadcaster) will use
-deploy_stack GitHubLambdaExecutionRoleStack templates/github_lambda_execution_role.yaml $CONFIG_FILE
-if [ $? -ne 0 ]; then
-  echo "Failed to deploy GitHubLambdaExecutionRoleStack stack. Exiting."
-  exit 1
-fi
-echo "Complete"
+# deploy_stack GitHubLambdaExecutionRoleStack templates/github_lambda_execution_role.yaml $CONFIG_FILE
+# if [ $? -ne 0 ]; then
+#  echo "Failed to deploy GitHubLambdaExecutionRoleStack stack. Exiting."
+#  exit 1
+# fi
+# echo "Complete"
 
 # Fetch the exported Role ARN
 ROLE_EXPORT_NAME=$(jq -r '.Parameters[] | select(.ParameterKey=="ExportName") | .ParameterValue' "$CONFIG_FILE")
