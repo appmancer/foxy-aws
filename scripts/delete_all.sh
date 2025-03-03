@@ -171,17 +171,17 @@ if [ -n "$ROLE_STACK" ]; then
   delete_stack $ROLE_STACK
 fi
 
-echo "Deleting GitHub Lambda Deploy Role stack..."
-if [ -n "$GITHUB_LAMBDA_DEPLOY_ROLE_STACK" ]; then
-  remove_policies $GITHUB_LAMBDA_DEPLOY_ROLE_STACK
-  delete_stack $GITHUB_LAMBDA_DEPLOY_ROLE_STACK
-fi
+# echo "Deleting GitHub Lambda Deploy Role stack..."
+# if [ -n "$GITHUB_LAMBDA_DEPLOY_ROLE_STACK" ]; then
+#  remove_policies $GITHUB_LAMBDA_DEPLOY_ROLE_STACK
+#  delete_stack $GITHUB_LAMBDA_DEPLOY_ROLE_STACK
+#fi
 
-echo "Deleting GitHub Lambda Deploy Role stack..."
-if [ -n "$GITHUB_LAMBDA_EXEC_ROLE_STACK" ]; then
-  remove_policies $GITHUB_LAMBDA_EXEC_ROLE_STACK
-  delete_stack $GITHUB_LAMBDA_EXEC_ROLE_STACK
-fi
+# echo "Deleting GitHub Lambda Deploy Role stack..."
+# if [ -n "$GITHUB_LAMBDA_EXEC_ROLE_STACK" ]; then
+#   remove_policies $GITHUB_LAMBDA_EXEC_ROLE_STACK
+#   delete_stack $GITHUB_LAMBDA_EXEC_ROLE_STACK
+# fi
 
 # Remove the database roles safely
 ROLE_NAMES=("foxy_${ENVIRONMENT_NAME}_AppRole" "foxy_${ENVIRONMENT_NAME}_AdminRole" "foxy_${ENVIRONMENT_NAME}_ReportingRole")
