@@ -95,6 +95,14 @@ Resources:
           AttributeDataType: "Boolean"
           Mutable: true
           Required: false
+        - Name: "phone_hash"
+          AttributeDataType: "String"
+          Mutable: true
+          Required: false
+        - Name: "did"
+          AttributeDataType: "String"
+          Mutable: true
+          Required: false
       Policies:
         PasswordPolicy:
           MinimumLength: 8
@@ -134,3 +142,4 @@ Outputs:
   UserPoolClientId:
     Description: "The Client ID of the Cognito User Pool Client"
     Value: !Ref CognitoUserPoolClient
+
