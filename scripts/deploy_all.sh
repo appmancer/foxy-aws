@@ -84,7 +84,6 @@ SERVICE_ACCOUNT_STACK=$(jq -r '.Stacks.ServiceAccountStack // empty' $PARAMETERS
 CUSTOM_AUTH_STACK=$(jq -r '.Stacks.CustomAuthStack // empty' $PARAMETERS_FILE)
 
 # Step 1: Deploy the IAM Role stack
-echo "Deploying IAM Role stacks..."
 echo "Deploying Cognito Role Stack..."
 # This is the role that the Cognito lambda executes as
 deploy_stack CognitoRoleStack templates/cognito_lambda_role.yaml $CONFIG_FILE
@@ -92,6 +91,7 @@ if [ $? -ne 0 ]; then
   echo "Failed to deploy CognitoRoleStack stack. Exiting."
   exit 1
 fi
+echo "✅ Complete."
 
 # These next two function support creating roles for deploying and executing microservices
 # echo "Deploying GitHub Lambda Deployment Role Stack..."
@@ -132,6 +132,7 @@ USER_POOL_ID=$(aws cloudformation describe-stacks \
   --query "Stacks[0].Outputs[?OutputKey=='UserPoolId'].OutputValue" \
   --output text \
   --region $REGION)
+echo "✅ Complete."
 
 # Step 3: Deploy the Service Accounts stack
 echo "Deploying Service Accounts..."
@@ -187,6 +188,7 @@ EOL
 else
   echo "No Service Account stack defined. Skipping deployment."
 fi
+echo "✅ Complete."
 
 # Step n: Deploy S3 Buckets
 echo "Deploying S3 Buckets..."
@@ -215,6 +217,7 @@ else
   echo "❌ File s3://$BUCKET_NAME/$S3_KEY does not exist. Aborting deployment."
   exit 1
 fi
+echo "✅ Complete."
 
 deploy_stack CustomAuthStack templates/custom_auth_lambda.yaml $CONFIG_FILE "RoleArn=$ROLE_ARN" "UserPoolId=$USER_POOL_ID"
 
@@ -240,17 +243,18 @@ CUSTOM_AUTH_LAMBDA_ARN=$(aws cloudformation describe-stacks \
 # Step 5: Deploy DynamoDB Database
 echo "Deploying database..."
 deploy_stack DatabaseStack templates/database.yaml $CONFIG_FILE
-echo "Complete."
+echo "✅ Complete."
 
 # Step 6: Deploying Queues
 echo "Deploying queues..."
 deploy_stack QueueStack templates/queues.yaml $CONFIG_FILE
-echo "Complete."
+echo "✅ Complete."
 
 # Step 7: Configuring API Gateway
 echo "Configuring API Gateway"
 TIMESTAMP=$(date +%Y%m%d%H%M%S)
 deploy_stack APIGatewayStack templates/api_gateway.yaml $CONFIG_FILE "CustomAuthLambdaArn=$CUSTOM_AUTH_LAMBDA_ARN" "DeploymentTimestamp=$TIMESTAMP"
+echo "✅ Complete."
 
 # Cleanup
 rm -f $LAMBDA_CONFIG_FILE
