@@ -1,5 +1,5 @@
 chmod +rx ./scripts/*
-
+rm -rf deploy.log
 
 ENV=$1
 

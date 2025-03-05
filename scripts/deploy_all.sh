@@ -2,6 +2,35 @@
 
 set -e
 
+deploy_function(){
+  local SOURCE_FILE="$1"
+  local BUCKET_NAME="$2"
+  local ZIP_FILE="function.zip"
+  local ENVIRONMENT_NAME="$4"
+  local S3_KEY="lambda/${ZIP_FILE}"
+
+  local LAMBDA_FUNCTION_NAME="foxy-${ENVIRONMENT_NAME}-CognitoCustomAuthLambda"
+  zip -q -j $ZIP_FILE $SOURCE_FILE
+
+  echo "Deploying $LAMBDA_FUNCTION_NAME..."
+  # Upload function.zip to S3
+  aws s3 cp $ZIP_FILE s3://$BUCKET_NAME/$S3_KEY --region $REGION
+
+  echo "Uploaded $ZIP_FILE to s3://$BUCKET_NAME/$S3_KEY"
+
+  # Check if the Lambda package exists in S3
+  if aws s3api head-object --bucket "$BUCKET_NAME" --key "$S3_KEY" --region "$REGION" > /dev/null 2>&1; then
+    echo "✅ File s3://$BUCKET_NAME/$S3_KEY exists. Continuing deployment..."
+  else
+    echo "❌ File s3://$BUCKET_NAME/$S3_KEY does not exist. Aborting deployment."
+    exit 1
+  fi
+
+  rm -f $ZIP_FILE
+  echo "Cleaned up local $ZIP_FILE"
+  echo "✅ Complete."
+}
+
 # Function to deploy a CloudFormation stack
 deploy_stack() {
   local STACK_KEY=$1
@@ -196,29 +225,10 @@ deploy_stack S3BucketStack templates/s3_buckets.yaml $CONFIG_FILE
 echo "Complete."
 
 # Step 4: Deploy Lambda Function
-echo "Deploying Lambda function..."
-# Define variables
-BUCKET_NAME="foxy-${ENVIRONMENT_NAME}-lambda-deployments-${ACCOUNT}"
-ZIP_FILE="function.zip"
-S3_KEY="lambda/${ZIP_FILE}"
+echo "Deploying Lambda functions..."
 
-LAMBDA_FUNCTION_NAME="foxy-${ENVIRONMENT_NAME}-CognitoCustomAuthLambda"
-zip -q -j $ZIP_FILE ./scripts/custom_auth_lambda.py
-
-# Upload function.zip to S3
-aws s3 cp $ZIP_FILE s3://$BUCKET_NAME/$S3_KEY --region $REGION
-
-echo "Uploaded $ZIP_FILE to s3://$BUCKET_NAME/$S3_KEY"
-
-# Check if the Lambda package exists in S3
-if aws s3api head-object --bucket "$BUCKET_NAME" --key "$S3_KEY" --region "$REGION" > /dev/null 2>&1; then
-  echo "✅ File s3://$BUCKET_NAME/$S3_KEY exists. Continuing deployment..."
-else
-  echo "❌ File s3://$BUCKET_NAME/$S3_KEY does not exist. Aborting deployment."
-  exit 1
-fi
-echo "✅ Complete."
-
+#Custom Auth
+deploy_function ./scripts/custom_auth_lambda.py "foxy-${ENVIRONMENT_NAME}-lambda-deployments-${ACCOUNT}" $ENVIRONMENT_NAME
 deploy_stack CustomAuthStack templates/custom_auth_lambda.yaml $CONFIG_FILE "RoleArn=$ROLE_ARN" "UserPoolId=$USER_POOL_ID"
 
 # this used to work in cloudformation, but I've had to move it here.  TODO: fix.
@@ -231,14 +241,16 @@ aws cognito-idp update-user-pool \
     \"VerifyAuthChallengeResponse\": \"arn:aws:lambda:eu-north-1:971422686568:function:foxy-${ENVIRONMENT_NAME}-CognitoCustomAuthLambda\"
   }"
 
-rm -f $ZIP_FILE
-echo "Cleaned up local $ZIP_FILE"
-
 CUSTOM_AUTH_LAMBDA_ARN=$(aws cloudformation describe-stacks \
   --stack-name $CUSTOM_AUTH_STACK \
   --query "Stacks[0].Outputs[?OutputKey=='LambdaFunctionArn'].OutputValue" \
   --output text \
   --region $REGION)
+ 
+#Key rotation
+deploy_function ./scripts/rotate_key_lambda.py "foxy-${ENVIRONMENT_NAME}-lambda-deployments-${ACCOUNT}" $ENVIRONMENT_NAME 
+echo "✅ Lambda functions uploaded."
+
 
 # Step 5: Deploy DynamoDB Database
 echo "Deploying database..."
