@@ -118,6 +118,8 @@ Resources:
 
   KeyRotationDashboard:
     Type: AWS::CloudWatch::Dashboard
+    DependsOn:
+      - KeyRotationAlarm 
     Properties:
       DashboardName: !Sub "foxy-${EnvironmentName}-KeyRotation"
       DashboardBody: !Sub |

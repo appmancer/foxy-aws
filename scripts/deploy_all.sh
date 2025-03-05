@@ -256,13 +256,6 @@ CUSTOM_AUTH_LAMBDA_ARN=$(aws cloudformation describe-stacks \
   --query "Stacks[0].Outputs[?OutputKey=='LambdaFunctionArn'].OutputValue" \
   --output text \
   --region $REGION)
- 
-#Key rotation
-deploy_function ./scripts/rotate_key_lambda.py "foxy-${ENVIRONMENT_NAME}-lambda-deployments-${ACCOUNT}" "function.zip" $ENVIRONMENT_NAME 
-deploy_function ./scripts/security_notification_lambda.py "foxy-${ENVIRONMENT_NAME}-lambda-deployments-${ACCOUNT}" "sns_to_ses.zip" $ENVIRONMENT_NAME 
-deploy_stack KeyRotationStack templates/key_rotation.yaml $CONFIG_FILE "KeyRotationRoleArn=arn:aws:iam::${ACCOUNT}:role/Foxy-${ENVIRONMENT_NAME}-KeyRotationRole" "UserPoolId=$USER_POOL_ID"
-echo "✅ Lambda functions uploaded."
-
 
 # Step 5: Deploy DynamoDB Database
 echo "Deploying database..."

@@ -174,12 +174,6 @@ if [ -n "$ROLE_STACK" ]; then
   delete_stack $ROLE_STACK
 fi
 
-echo "Deleting Key Rotation Role stack..."
-if [ -n "$KEY_ROTATION_ROLE_STACK" ]; then
-  remove_policies $KEY_ROTATION_ROLE_STACK KeyRotationRoleName
-  delete_stack $KEY_ROTATION_ROLE_STACK
-fi
-
 # echo "Deleting GitHub Lambda Deploy Role stack..."
 # if [ -n "$GITHUB_LAMBDA_DEPLOY_ROLE_STACK" ]; then
 #  remove_policies $GITHUB_LAMBDA_DEPLOY_ROLE_STACK
@@ -272,9 +266,6 @@ if [ -n "$API_GATEWAY_STACK" ]; then
 	fi
 
   delete_stack $API_GATEWAY_STACK
-fi
-if [ -n "$KEY_ROTATION_STACK" ]; then
-  delete_stack $KEY_ROTATION_STACK
 fi
 
 # empty the bucket first

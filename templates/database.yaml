@@ -8,20 +8,6 @@ Parameters:
 
 Resources:
 
-  # 1️⃣ New DynamoDB Table for DID Storage (External Resolution)
-  FoxyDIDTable:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      TableName: !Sub "foxy_${EnvironmentName}_DIDLookup"
-      AttributeDefinitions:
-        - AttributeName: did
-          AttributeType: S
-      KeySchema:
-        - AttributeName: did
-          KeyType: HASH
-      BillingMode: PAY_PER_REQUEST
-
-  # 2️⃣ Update DynamoDB User Lookup Table for Internal DID Mapping
   FoxyUserLookupTable:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -30,8 +16,6 @@ Resources:
         - AttributeName: hashed_phone
           AttributeType: S
         - AttributeName: user_id
-          AttributeType: S
-        - AttributeName: did  
           AttributeType: S
       KeySchema:
         - AttributeName: hashed_phone
@@ -43,75 +27,10 @@ Resources:
               KeyType: HASH
           Projection:
             ProjectionType: ALL
-        - IndexName: DIDIndex
-          KeySchema:
-            - AttributeName: did
-              KeyType: HASH
-          Projection:
-            ProjectionType: ALL
       BillingMode: PAY_PER_REQUEST
 
-  # 3️⃣ IAM Role for DID Resolver Lambda (External API)
-  DIDResolverLambdaRole:
-    Type: AWS::IAM::Role
-    Properties:
-      RoleName: !Sub "foxy-${EnvironmentName}-DIDResolverRole"
-      AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: 
-                - lambda.amazonaws.com
-            Action: "sts:AssumeRole"
-      Policies:
-        - PolicyName: "DIDResolverDynamoDBAccess"
-          PolicyDocument:
-            Version: "2012-10-17"
-            Statement:
-              - Effect: Allow
-                Action:
-                  - dynamodb:GetItem
-                  - dynamodb:Query
-                Resource: 
-                  - !GetAtt FoxyDIDTable.Arn
-                  - !GetAtt FoxyUserLookupTable.Arn
-
-  # 4️⃣ IAM Role for Application (Internal DID Usage)
-  AppRole:
-    Type: AWS::IAM::Role
-    Properties:
-      RoleName: !Sub "foxy_${EnvironmentName}_AppRole-${AWS::StackName}"
-      AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: lambda.amazonaws.com
-            Action: sts:AssumeRole
-      Policies:
-        - PolicyName: !Sub "foxy_${EnvironmentName}_AppPolicy"
-          PolicyDocument:
-            Version: "2012-10-17"
-            Statement:
-              - Effect: Allow
-                Action:
-                  - dynamodb:PutItem
-                  - dynamodb:UpdateItem
-                  - dynamodb:GetItem
-                  - dynamodb:BatchGetItem
-                  - dynamodb:Query
-                Resource:
-                  - !GetAtt FoxyDIDTable.Arn
-                  - !GetAtt FoxyUserLookupTable.Arn
-    DeletionPolicy: Delete
 
 Outputs:
-
-  DIDTableName:
-    Description: Name of the DynamoDB DID Lookup Table
-    Value: !Ref FoxyDIDTable
-
   UserLookupTableName:
     Description: Name of the DynamoDB User Lookup Table
     Value: !Ref FoxyUserLookupTable
@@ -119,7 +38,3 @@ Outputs:
   AppRoleARN:
     Description: ARN of the Application IAM Role
     Value: !GetAtt AppRole.Arn
-
-  DIDResolverRoleARN:
-    Description: ARN of the DID Resolver IAM Role
-    Value: !GetAtt DIDResolverLambdaRole.Arn
