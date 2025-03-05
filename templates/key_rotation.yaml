@@ -115,7 +115,7 @@ Resources:
         Variables:
           SES_RECIPIENT: "foxy@getfoxy.app"
           SES_SENDER: "admin@getfoxy.app"
-          
+
   KeyRotationDashboard:
     Type: AWS::CloudWatch::Dashboard
     Properties:
@@ -157,17 +157,19 @@ Resources:
               }
             },
             {
-              "type": "metric",
+              "type": "alarm",
               "x": 6,
               "y": 0,
               "width": 6,
               "height": 3,
               "properties": {
-                "annotations": {
-                  "alarms": []
-                },
                 "title": "Key Rotation Alerts",
-                "region": "${AWS::Region}"
+                "region": "${AWS::Region}",
+                "annotations": {
+                  "alarms": [
+                    "arn:aws:cloudwatch:${AWS::Region}:${AWS::AccountId}:alarm/foxy-${EnvironmentName}-DIDKeyRotationMissing"
+                  ]
+                }
               }
             }
           ]
