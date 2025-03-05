@@ -162,10 +162,6 @@ if [ $? -ne 0 ]; then
 fi
 echo "✅ Complete."
 
-#Get the key rotation role arn
-KEY_ROTATION_ARN=$(aws cloudformation list-exports --query "Exports[?Name=='KeyRotationRoleArn'].Value" --output text)
-echo "Fetched Key Rotation Role ARN: $KEY_ROTATION_ARN"
-
 # Step 2: Deploy the Cognito User Pool stack
 echo "Deploying Cognito User Pool stack..."
 deploy_stack UserPoolStack templates/cognito_user_pool.yaml $CONFIG_FILE
@@ -263,7 +259,7 @@ CUSTOM_AUTH_LAMBDA_ARN=$(aws cloudformation describe-stacks \
  
 #Key rotation
 deploy_function ./scripts/rotate_key_lambda.py "foxy-${ENVIRONMENT_NAME}-lambda-deployments-${ACCOUNT}" $ENVIRONMENT_NAME 
-deploy_stack KeyRotationStack templates/key_rotation.yaml $CONFIG_FILE "KeyRotationRoleArn=$KEY_ROTATION_ARN" "UserPoolId=$USER_POOL_ID"
+deploy_stack KeyRotationStack templates/key_rotation.yaml $CONFIG_FILE "KeyRotationRoleArn=arn:aws:iam::${ACCOUNT}:role/Foxy-${ENVIRONMENT_NAME}-KeyRotationRole" "UserPoolId=$USER_POOL_ID"
 echo "✅ Lambda functions uploaded."
 
 
