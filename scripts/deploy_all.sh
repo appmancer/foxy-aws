@@ -154,14 +154,6 @@ if [ -z "$ROLE_ARN" ]; then
 fi
 echo "Fetched Role ARN: $ROLE_ARN"
 
-# Step 1.5 Deploy the Key Rotation role stack
-deploy_stack KeyRotationRoleStack templates/key_rotation_role.yaml $CONFIG_FILE
-if [ $? -ne 0 ]; then
-  echo "Failed to deploy KeyRotationRoleStack stack. Exiting."
-  exit 1
-fi
-echo "✅ Complete."
-
 # Step 2: Deploy the Cognito User Pool stack
 echo "Deploying Cognito User Pool stack..."
 deploy_stack UserPoolStack templates/cognito_user_pool.yaml $CONFIG_FILE
