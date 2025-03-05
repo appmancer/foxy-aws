@@ -20,7 +20,7 @@ Resources:
     Properties:
       FunctionName: !Sub "foxy-${EnvironmentName}-KeyRotationLambda"
       Handler: rotate_key_lambda.lambda_handler
-      Role: !Ref RoleArn
+      Role: !Ref KeyRotationRoleArn
       Runtime: python3.9
       Timeout: 10
       MemorySize: 128
