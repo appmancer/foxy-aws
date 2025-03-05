@@ -81,15 +81,42 @@ Resources:
       DisplayName: !Sub "Foxy-${EnvironmentName}-SecurityNotifications"
       TopicName: !Sub "foxy-${EnvironmentName}-SecurityNotifications"
 
-  # 7️⃣ SNS Subscription (Email Notifications)
-  SecurityNotificationsSubscription:
+  # 7️⃣ Subscribe SNS to Lambda
+  SecurityLambdaSubscription:
     Type: AWS::SNS::Subscription
     Properties:
       TopicArn: !Ref SecurityNotificationsTopic
-      Protocol: email
-      Endpoint: "foxy@getfoxy.app" 
+      Protocol: lambda
+      Endpoint: !GetAtt SecurityNotificationLambda.Arn
 
-  # 8️⃣ CloudWatch Dashboard
+  # 8️⃣ Allow SNS to invoke the Lambda function
+  SNSInvokeLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref SecurityNotificationLambda
+      Action: lambda:InvokeFunction
+      Principal: sns.amazonaws.com
+      SourceArn: !Ref SecurityNotificationsTopic
+
+  # 9️⃣ Lambda Function to Process SNS and Forward via SES
+  SecurityNotificationLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub "foxy-${EnvironmentName}-SecurityNotificationLambda"
+      Handler: lambda_function.lambda_handler
+      Role: !Ref KeyRotationRoleArn
+      Runtime: python3.9
+      Timeout: 10
+      MemorySize: 128
+      Code:
+        S3Bucket: !Sub "foxy-${EnvironmentName}-lambda-deployments-${AWS::AccountId}"
+        S3Key: lambda/sns_to_ses.zip
+      Environment:
+        Variables:
+          SES_RECIPIENT: "foxy@getfoxy.app"
+          SES_SENDER: "admin@getfoxy.app"
+
+  # 🔹 CloudWatch Dashboard for Monitoring Key Rotation
   KeyRotationDashboard:
     Type: AWS::CloudWatch::Dashboard
     Properties:
@@ -125,7 +152,7 @@ Resources:
           ]
         }
 
-  # 9️⃣ EventBridge Rule to Trigger Key Rotation Every 90 Days
+  # 🔟 EventBridge Rule to Trigger Key Rotation Every 90 Days
   KeyRotationSchedule:
     Type: AWS::Events::Rule
     Properties:
@@ -149,6 +176,10 @@ Outputs:
   LambdaFunctionName:
     Description: "Name of the Key Rotation Lambda function"
     Value: !Ref KeyRotationLambda
+
+  SecurityNotificationLambdaFunctionName:
+    Description: "Name of the Security Notification Lambda function"
+    Value: !Ref SecurityNotificationLambda
 
   LambdaFunctionArn:
     Description: "ARN of the Key Rotation Lambda function"

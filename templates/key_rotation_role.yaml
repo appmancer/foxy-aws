@@ -44,13 +44,12 @@ Resources:
                   - logs:PutLogEvents
                 Resource: !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/Foxy-${EnvironmentName}-KeyRotation:*"
 
-Outputs:
-  KeyRotationRoleArn:
-    Description: "ARN of the Key Rotation Lambda Execution Role"
-    Value: !GetAtt KeyRotationLambdaRole.Arn
-
-  KeyRotationRoleName:
-    Description: The name of the key rotation role
-    Value: !Ref KeyRotationLambdaRole
-    Export:
-      Name: !Sub "Foxy-${EnvironmentName}-KeyRotationRoleName"
+        - PolicyName: "SESSendEmail"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ses:SendEmail
+                  - ses:SendRawEmail
+                Resource: "*"

@@ -5,7 +5,7 @@ set -e
 deploy_function(){
   local SOURCE_FILE="$1"
   local BUCKET_NAME="$2"
-  local ZIP_FILE="function.zip"
+  local ZIP_FILE="$3"
   local ENVIRONMENT_NAME="$4"
   local S3_KEY="lambda/${ZIP_FILE}"
 
@@ -238,7 +238,7 @@ echo "Complete."
 echo "Deploying Lambda functions..."
 
 #Custom Auth
-deploy_function ./scripts/custom_auth_lambda.py "foxy-${ENVIRONMENT_NAME}-lambda-deployments-${ACCOUNT}" $ENVIRONMENT_NAME
+deploy_function ./scripts/custom_auth_lambda.py "foxy-${ENVIRONMENT_NAME}-lambda-deployments-${ACCOUNT}" "function.zip" $ENVIRONMENT_NAME
 deploy_stack CustomAuthStack templates/custom_auth_lambda.yaml $CONFIG_FILE "RoleArn=$ROLE_ARN" "UserPoolId=$USER_POOL_ID"
 
 # this used to work in cloudformation, but I've had to move it here.  TODO: fix.
@@ -258,7 +258,8 @@ CUSTOM_AUTH_LAMBDA_ARN=$(aws cloudformation describe-stacks \
   --region $REGION)
  
 #Key rotation
-deploy_function ./scripts/rotate_key_lambda.py "foxy-${ENVIRONMENT_NAME}-lambda-deployments-${ACCOUNT}" $ENVIRONMENT_NAME 
+deploy_function ./scripts/rotate_key_lambda.py "foxy-${ENVIRONMENT_NAME}-lambda-deployments-${ACCOUNT}" "function.zip" $ENVIRONMENT_NAME 
+deploy_function ./scripts/security_notification_lambda.py "foxy-${ENVIRONMENT_NAME}-lambda-deployments-${ACCOUNT}" "sns_to_ses.zip" $ENVIRONMENT_NAME 
 deploy_stack KeyRotationStack templates/key_rotation.yaml $CONFIG_FILE "KeyRotationRoleArn=arn:aws:iam::${ACCOUNT}:role/Foxy-${ENVIRONMENT_NAME}-KeyRotationRole" "UserPoolId=$USER_POOL_ID"
 echo "✅ Lambda functions uploaded."
 
