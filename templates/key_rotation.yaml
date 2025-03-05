@@ -116,7 +116,7 @@ Resources:
           SES_RECIPIENT: "foxy@getfoxy.app"
           SES_SENDER: "admin@getfoxy.app"
 
-    KeyRotationDashboard:
+  KeyRotationDashboard:
     Type: AWS::CloudWatch::Dashboard
     Properties:
       DashboardName: !Sub "foxy-${EnvironmentName}-KeyRotation"
