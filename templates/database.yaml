@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: CloudFormation stack to create DynamoDB tables and IAM roles for Foxy transaction processing.
+Description: CloudFormation stack to create DynamoDB tables and IAM roles for Foxy DID system.
 
 Parameters:
   EnvironmentName:
@@ -8,54 +8,20 @@ Parameters:
 
 Resources:
 
-  # DynamoDB Event Store Table
-  TransactionEventLogTable:
+  # 1️⃣ New DynamoDB Table for DID Storage (External Resolution)
+  FoxyDIDTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: !Sub "foxy_${EnvironmentName}_TransactionEventLog"
+      TableName: !Sub "foxy_${EnvironmentName}_DIDLookup"
       AttributeDefinitions:
-        - AttributeName: PK
-          AttributeType: S
-        - AttributeName: SK
+        - AttributeName: did
           AttributeType: S
       KeySchema:
-        - AttributeName: PK
+        - AttributeName: did
           KeyType: HASH
-        - AttributeName: SK
-          KeyType: RANGE
       BillingMode: PAY_PER_REQUEST
 
-  # DynamoDB State View Table
-  TransactionStateViewTable:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      TableName: !Sub "foxy_${EnvironmentName}_TransactionStateView"
-      AttributeDefinitions:
-        - AttributeName: PK
-          AttributeType: S
-        - AttributeName: SK
-          AttributeType: S
-        - AttributeName: Status
-          AttributeType: S
-        - AttributeName: UpdatedAt
-          AttributeType: S
-      KeySchema:
-        - AttributeName: PK
-          KeyType: HASH
-        - AttributeName: SK
-          KeyType: RANGE
-      GlobalSecondaryIndexes:
-        - IndexName: GSI1-Status-UpdatedAt
-          KeySchema:
-            - AttributeName: Status
-              KeyType: HASH
-            - AttributeName: UpdatedAt
-              KeyType: RANGE
-          Projection:
-            ProjectionType: ALL
-      BillingMode: PAY_PER_REQUEST
-
-  # New DynamoDB Table for Contact Discovery
+  # 2️⃣ Update DynamoDB User Lookup Table for Internal DID Mapping
   FoxyUserLookupTable:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -64,6 +30,8 @@ Resources:
         - AttributeName: hashed_phone
           AttributeType: S
         - AttributeName: user_id
+          AttributeType: S
+        - AttributeName: did  
           AttributeType: S
       KeySchema:
         - AttributeName: hashed_phone
@@ -75,9 +43,41 @@ Resources:
               KeyType: HASH
           Projection:
             ProjectionType: ALL
+        - IndexName: DIDIndex
+          KeySchema:
+            - AttributeName: did
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
       BillingMode: PAY_PER_REQUEST
 
-  # IAM Role for Application
+  # 3️⃣ IAM Role for DID Resolver Lambda (External API)
+  DIDResolverLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "foxy-${EnvironmentName}-DIDResolverRole"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: 
+                - lambda.amazonaws.com
+            Action: "sts:AssumeRole"
+      Policies:
+        - PolicyName: "DIDResolverDynamoDBAccess"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:Query
+                Resource: 
+                  - !GetAtt FoxyDIDTable.Arn
+                  - !GetAtt FoxyUserLookupTable.Arn
+
+  # 4️⃣ IAM Role for Application (Internal DID Usage)
   AppRole:
     Type: AWS::IAM::Role
     Properties:
@@ -102,59 +102,15 @@ Resources:
                   - dynamodb:BatchGetItem
                   - dynamodb:Query
                 Resource:
-                  - !GetAtt TransactionEventLogTable.Arn
-                  - !GetAtt TransactionStateViewTable.Arn
+                  - !GetAtt FoxyDIDTable.Arn
                   - !GetAtt FoxyUserLookupTable.Arn
-    DeletionPolicy: Delete
-
-  # IAM Role for Admin
-  AdminRole:
-    Type: AWS::IAM::Role
-    Properties:
-      RoleName: !Sub "foxy-${EnvironmentName}-AdminRole-${AWS::StackName}"
-      AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: ec2.amazonaws.com
-            Action: sts:AssumeRole
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
-    DeletionPolicy: Delete
-
-  # IAM Role for Reporting
-  ReportingRole:
-    Type: AWS::IAM::Role
-    Properties:
-      RoleName: !Sub "foxy_${EnvironmentName}_ReportingRole-${AWS::StackName}"
-      AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: quicksight.amazonaws.com
-            Action: sts:AssumeRole
-      Policies:
-        - PolicyName: !Sub "foxy_${EnvironmentName}_ReportingPolicy"
-          PolicyDocument:
-            Version: "2012-10-17"
-            Statement:
-              - Effect: Allow
-                Action:
-                  - dynamodb:Query
-                Resource: !GetAtt TransactionStateViewTable.Arn
     DeletionPolicy: Delete
 
 Outputs:
 
-  EventLogTableName:
-    Description: Name of the DynamoDB Event Log Table
-    Value: !Ref TransactionEventLogTable
-
-  StateViewTableName:
-    Description: Name of the DynamoDB State View Table
-    Value: !Ref TransactionStateViewTable
+  DIDTableName:
+    Description: Name of the DynamoDB DID Lookup Table
+    Value: !Ref FoxyDIDTable
 
   UserLookupTableName:
     Description: Name of the DynamoDB User Lookup Table
@@ -164,11 +120,6 @@ Outputs:
     Description: ARN of the Application IAM Role
     Value: !GetAtt AppRole.Arn
 
-  AdminRoleARN:
-    Description: ARN of the Admin IAM Role
-    Value: !GetAtt AdminRole.Arn
-
-  ReportingRoleARN:
-    Description: ARN of the Reporting IAM Role
-    Value: !GetAtt ReportingRole.Arn
-
+  DIDResolverRoleARN:
+    Description: ARN of the DID Resolver IAM Role
+    Value: !GetAtt DIDResolverLambdaRole.Arn

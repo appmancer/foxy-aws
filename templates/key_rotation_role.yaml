@@ -1,0 +1,50 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "IAM Role for Foxy Key Rotation Lambda"
+
+Parameters:
+  EnvironmentName:
+    Type: String
+    Description: The name of the environment (e.g., dev, staging, production)
+
+Resources:
+  KeyRotationLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action: sts:AssumeRole
+      RoleName: !Sub "Foxy-${EnvironmentName}-KeyRotationRole"
+      Path: "/"
+      Policies:
+        - PolicyName: "SecretsManagerAccess"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - secretsmanager:GetSecretValue
+                  - secretsmanager:UpdateSecret
+                Resource:
+                  - !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:foxy/secret-key*"
+                  - !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:foxy/previous-keys*"
+
+        - PolicyName: "LambdaLogging"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/Foxy-${EnvironmentName}-KeyRotation:*"
+
+Outputs:
+  KeyRotationRoleArn:
+    Description: "ARN of the Key Rotation Lambda Execution Role"
+    Value: !GetAtt KeyRotationLambdaRole.Arn

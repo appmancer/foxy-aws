@@ -5,7 +5,7 @@ Parameters:
   EnvironmentName:
     Type: String
     Description: The name of the environment (e.g., dev, staging, prod)
-  RoleArn:
+  KeyRotationRoleArn:
     Type: String
     Description: ARN of the IAM role for Lambda execution.
   UserPoolId:
@@ -123,6 +123,24 @@ Resources:
             }
           ]
         }
+
+  # 9️⃣ EventBridge Rule to Trigger Key Rotation Every 90 Days
+  KeyRotationSchedule:
+    Type: AWS::Events::Rule
+    Properties:
+      ScheduleExpression: "rate(90 days)" 
+      Targets:
+        - Arn: !GetAtt KeyRotationLambda.Arn
+          Id: "KeyRotationTarget"
+
+  # 🔹 Give EventBridge Permission to Invoke Lambda
+  KeyRotationLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref KeyRotationLambda
+      Action: "lambda:InvokeFunction"
+      Principal: "events.amazonaws.com"
+      SourceArn: !GetAtt KeyRotationSchedule.Arn
 
 Outputs:
 

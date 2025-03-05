@@ -4,6 +4,7 @@
   "Account": 971422686568,
   "Stacks": {
     "CognitoRoleStack": "foxy-dev-role",
+    "KeyRotationRoleStack": "foxy-dev-key-rotation-role",
     "GitHubLambdaDeployRoleStack": "foxy-dev-github-lambda-deploy-role",
     "GitHubLambdaExecutionRoleStack": "foxy-dev-github-lambda-execution-role",
     "UserPoolStack": "foxy-dev-user-pool",
@@ -26,6 +27,10 @@
     {
       "ParameterKey": "ExportName",
       "ParameterValue": "Foxy-dev-Cognito-Lambda-ExecutionRoleName"
+    },
+    {
+      "ParameterKey": "KeyRotationName",
+      "ParameterValue": "Foxy-dev-IAM-KeyRotationRoleName"
     },
     {
       "ParameterKey": "GitHubOrg",

@@ -113,6 +113,7 @@ SERVICE_ACCOUNT_STACK=$(jq -r '.Stacks.ServiceAccountStack // empty' $PARAMETERS
 CUSTOM_AUTH_STACK=$(jq -r '.Stacks.CustomAuthStack // empty' $PARAMETERS_FILE)
 
 # Step 1: Deploy the IAM Role stack
+echo "Deploying new IAM roles"
 echo "Deploying Cognito Role Stack..."
 # This is the role that the Cognito lambda executes as
 deploy_stack CognitoRoleStack templates/cognito_lambda_role.yaml $CONFIG_FILE
@@ -121,6 +122,7 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 echo "✅ Complete."
+
 
 # These next two function support creating roles for deploying and executing microservices
 # echo "Deploying GitHub Lambda Deployment Role Stack..."
@@ -151,6 +153,18 @@ if [ -z "$ROLE_ARN" ]; then
   exit 1
 fi
 echo "Fetched Role ARN: $ROLE_ARN"
+
+# Step 1.5 Deploy the Key Rotation role stack
+deploy_stack KeyRotationRoleStack templates/key_rotation_role.yaml $CONFIG_FILE
+if [ $? -ne 0 ]; then
+  echo "Failed to deploy KeyRotationRoleStack stack. Exiting."
+  exit 1
+fi
+echo "✅ Complete."
+
+//Get the key rotation role arn
+KEY_ROTATION_ARN=$(aws cloudformation list-exports --query "Exports[?Name=='KeyRotationRoleArn'].Value" --output text)
+echo "Fetched Key Rotation Role ARN: $KEY_ROTATION_ARN"
 
 # Step 2: Deploy the Cognito User Pool stack
 echo "Deploying Cognito User Pool stack..."
@@ -249,7 +263,7 @@ CUSTOM_AUTH_LAMBDA_ARN=$(aws cloudformation describe-stacks \
  
 #Key rotation
 deploy_function ./scripts/rotate_key_lambda.py "foxy-${ENVIRONMENT_NAME}-lambda-deployments-${ACCOUNT}" $ENVIRONMENT_NAME 
-deploy_stack KeyRotationStack templates/rotate_key_lambda.yaml $CONFIG_FILE "RoleArn=$ROLE_ARN" "UserPoolId=$USER_POOL_ID"
+deploy_stack KeyRotationStack templates/rotate_key_lambda.yaml $CONFIG_FILE "KeyRotationRoleArn=$KEY_ROTATION_ARN" "UserPoolId=$USER_POOL_ID"
 echo "✅ Lambda functions uploaded."
 
 
