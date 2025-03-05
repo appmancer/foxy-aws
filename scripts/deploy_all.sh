@@ -263,7 +263,7 @@ CUSTOM_AUTH_LAMBDA_ARN=$(aws cloudformation describe-stacks \
  
 #Key rotation
 deploy_function ./scripts/rotate_key_lambda.py "foxy-${ENVIRONMENT_NAME}-lambda-deployments-${ACCOUNT}" $ENVIRONMENT_NAME 
-deploy_stack KeyRotationStack templates/rotate_key_lambda.yaml $CONFIG_FILE "KeyRotationRoleArn=$KEY_ROTATION_ARN" "UserPoolId=$USER_POOL_ID"
+deploy_stack KeyRotationStack templates/key_rotation.yaml $CONFIG_FILE "KeyRotationRoleArn=$KEY_ROTATION_ARN" "UserPoolId=$USER_POOL_ID"
 echo "✅ Lambda functions uploaded."
 
 
