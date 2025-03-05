@@ -116,8 +116,7 @@ Resources:
           SES_RECIPIENT: "foxy@getfoxy.app"
           SES_SENDER: "admin@getfoxy.app"
 
-  # 🔹 CloudWatch Dashboard for Monitoring Key Rotation
-  KeyRotationDashboard:
+    KeyRotationDashboard:
     Type: AWS::CloudWatch::Dashboard
     Properties:
       DashboardName: !Sub "foxy-${EnvironmentName}-KeyRotation"
@@ -134,8 +133,13 @@ Resources:
                 "metrics": [
                   [ "FoxySecurity", "DidKeyRotationCount" ]
                 ],
+                "region": "${AWS::Region}",
+                "view": "timeSeries",      
                 "period": 86400,
                 "stat": "Sum",
+                "annotations": {           
+                  "alarms": []
+                },
                 "title": "DID Key Rotations"
               }
             },
