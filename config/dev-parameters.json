@@ -13,7 +13,8 @@
     "QueueStack": "foxy-dev-queues",
     "CustomAuthStack": "foxy-dev-custom-auth",
     "S3BucketStack": "foxy-dev-s3-buckets",
-    "APIGatewayStack": "foxy-dev-api-gateway"
+    "APIGatewayStack": "foxy-dev-api-gateway",
+    "KeyRotationStack": "foxy-dev-key-rotation"
   },
   "Parameters": [
     {
@@ -27,10 +28,6 @@
     {
       "ParameterKey": "ExportName",
       "ParameterValue": "Foxy-dev-Cognito-Lambda-ExecutionRoleName"
-    },
-    {
-      "ParameterKey": "KeyRotationName",
-      "ParameterValue": "Foxy-dev-IAM-KeyRotationRoleName"
     },
     {
       "ParameterKey": "GitHubOrg",

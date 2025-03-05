@@ -162,7 +162,7 @@ if [ $? -ne 0 ]; then
 fi
 echo "✅ Complete."
 
-//Get the key rotation role arn
+#Get the key rotation role arn
 KEY_ROTATION_ARN=$(aws cloudformation list-exports --query "Exports[?Name=='KeyRotationRoleArn'].Value" --output text)
 echo "Fetched Key Rotation Role ARN: $KEY_ROTATION_ARN"
 

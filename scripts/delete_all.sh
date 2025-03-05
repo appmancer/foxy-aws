@@ -86,6 +86,8 @@ ENVIRONMENT_NAME=$(jq -r '.Parameters[] | select(.ParameterKey=="EnvironmentName
 REGION=$(jq -r '.Region' $PARAMETERS_FILE)
 ACCOUNT=$(jq -r '.Account' $PARAMETERS_FILE)
 ROLE_STACK=$(jq -r '.Stacks.CognitoRoleStack' $PARAMETERS_FILE)
+KEY_ROTATION_ROLE_STACK=$(jq -r '.Stacks.KeyRotationRoleStack' $PARAMETERS_FILE)
+KEY_ROTATION_STACK=$(jq -r '.Stacks.KeyRotationStack' $PARAMETERS_FILE)
 GITHUB_LAMBDA_DEPLOY_ROLE_STACK=$(jq -r '.Stacks.GitHubLambdaDeployRoleStack' $PARAMETERS_FILE)
 GITHUB_LAMBDA_EXEC_ROLE_STACK=$(jq -r '.Stacks.GitHubLambdaExecutionRoleStack' $PARAMETERS_FILE)
 CUSTOM_AUTH_STACK=$(jq -r '.Stacks.CustomAuthStack' $PARAMETERS_FILE)
@@ -123,7 +125,7 @@ else
 fi
 
 # List and delete all event source mappings starting with Foxy-{EnvironmentName}
-echo "Deleting trigges matching 'foxy-${ENVIRONMENT_NAME}*'..."
+echo "Deleting triggers matching 'foxy-${ENVIRONMENT_NAME}*'..."
 aws lambda list-event-source-mappings \
   --query "EventSourceMappings[?starts_with(FunctionArn, 'arn:aws:lambda:eu-north-1:*:function:Foxy-${ENVIRONMENT_NAME}')].UUID" \
   --output text | while read uuid; do
@@ -169,6 +171,12 @@ echo "Deleting IAM Role stack..."
 if [ -n "$ROLE_STACK" ]; then
   remove_policies $ROLE_STACK
   delete_stack $ROLE_STACK
+fi
+
+echo "Deleting Key Rotation Role stack..."
+if [ -n "$KEY_ROTATION_ROLE_STACK" ]; then
+  remove_policies $KEY_ROTATION_ROLE_STACK
+  delete_stack $KEY_ROTATION_ROLE_STACK
 fi
 
 # echo "Deleting GitHub Lambda Deploy Role stack..."
@@ -263,6 +271,9 @@ if [ -n "$API_GATEWAY_STACK" ]; then
 	fi
 
   delete_stack $API_GATEWAY_STACK
+fi
+if [ -n "$KEY_ROTATION_STACK" ]; then
+  delete_stack $KEY_ROTATION_STACK
 fi
 
 # empty the bucket first
