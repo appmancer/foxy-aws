@@ -115,7 +115,7 @@ Resources:
         Variables:
           SES_RECIPIENT: "foxy@getfoxy.app"
           SES_SENDER: "admin@getfoxy.app"
-
+          
   KeyRotationDashboard:
     Type: AWS::CloudWatch::Dashboard
     Properties:
@@ -134,11 +134,14 @@ Resources:
                   [ "FoxySecurity", "DidKeyRotationCount" ]
                 ],
                 "region": "${AWS::Region}",
-                "view": "timeSeries",      
+                "view": "timeSeries",
                 "period": 86400,
                 "stat": "Sum",
-                "annotations": {           
-                  "alarms": []
+                "yAxis": {
+                  "left": {
+                    "label": "Rotations",
+                    "showUnits": false
+                  }
                 },
                 "title": "DID Key Rotations"
               }
@@ -152,9 +155,24 @@ Resources:
               "properties": {
                 "markdown": "## Key Rotation Status\nThis dashboard tracks key rotations. Alerts will be sent if rotations stop for more than 3 days."
               }
+            },
+            {
+              "type": "metric",
+              "x": 6,
+              "y": 0,
+              "width": 6,
+              "height": 3,
+              "properties": {
+                "annotations": {
+                  "alarms": []
+                },
+                "title": "Key Rotation Alerts",
+                "region": "${AWS::Region}"
+              }
             }
           ]
         }
+
 
   # 🔟 EventBridge Rule to Trigger Key Rotation Every 90 Days
   KeyRotationSchedule:
