@@ -50,6 +50,7 @@ Resources:
   # 4️⃣ CloudWatch Metric Filter for Key Rotation Events
   KeyRotationMetricFilter:
     Type: AWS::Logs::MetricFilter
+    DependsOn: LambdaLogGroup 
     Properties:
       LogGroupName: !Ref LambdaLogGroup
       FilterPattern: '{ $.event = "DID Key Rotation" }'
@@ -136,6 +137,7 @@ Resources:
   # 🔹 Give EventBridge Permission to Invoke Lambda
   KeyRotationLambdaPermission:
     Type: AWS::Lambda::Permission
+    DependsOn: KeyRotationLambda
     Properties:
       FunctionName: !Ref KeyRotationLambda
       Action: "lambda:InvokeFunction"
