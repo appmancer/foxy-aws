@@ -4,6 +4,7 @@ set -e
 
 remove_policies(){
   local STACK=$1
+  local ROLE_NAME=$2
 
   echo "Removing policies for ${STACK}"
   # Check if the Role Stack exists
@@ -11,7 +12,7 @@ remove_policies(){
     # Safely retrieve the Lambda Role Name
     LAMBDA_ROLE_NAME=$(aws cloudformation describe-stacks \
       --stack-name "$STACK" \
-      --query "Stacks[0].Outputs[?OutputKey=='CognitoLambdaExecutionRoleName'].OutputValue" \
+      --query "Stacks[0].Outputs[?OutputKey=='$ROLE_NAME'].OutputValue" \
       --output text)
 
     if [ -n "$LAMBDA_ROLE_NAME" ]; then
@@ -169,13 +170,13 @@ echo "Detaching policies and deleting Lambda execution role..."
 echo "Waiting for stacks to be deleted..."
 echo "Deleting IAM Role stack..."
 if [ -n "$ROLE_STACK" ]; then
-  remove_policies $ROLE_STACK
+  remove_policies $ROLE_STACK CognitoLambdaExecutionRoleName
   delete_stack $ROLE_STACK
 fi
 
 echo "Deleting Key Rotation Role stack..."
 if [ -n "$KEY_ROTATION_ROLE_STACK" ]; then
-  remove_policies $KEY_ROTATION_ROLE_STACK
+  remove_policies $KEY_ROTATION_ROLE_STACK KeyRotationRoleName
   delete_stack $KEY_ROTATION_ROLE_STACK
 fi
 

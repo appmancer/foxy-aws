@@ -48,3 +48,9 @@ Outputs:
   KeyRotationRoleArn:
     Description: "ARN of the Key Rotation Lambda Execution Role"
     Value: !GetAtt KeyRotationLambdaRole.Arn
+
+  KeyRotationRoleName:
+    Description: The name of the key rotation role
+    Value: !Ref KeyRotationLambdaRole
+    Export:
+      Name: !Sub "Foxy-${EnvironmentName}-KeyRotationRoleName"
