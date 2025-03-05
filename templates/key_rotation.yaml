@@ -165,16 +165,13 @@ Resources:
               "properties": {
                 "title": "Key Rotation Alerts",
                 "region": "${AWS::Region}",
-                "annotations": {
-                  "alarms": [
-                    "arn:aws:cloudwatch:${AWS::Region}:${AWS::AccountId}:alarm/foxy-${EnvironmentName}-DIDKeyRotationMissing"
-                  ]
-                }
+                "alarms": [
+                  "arn:aws:cloudwatch:${AWS::Region}:${AWS::AccountId}:alarm/foxy-${EnvironmentName}-DIDKeyRotationMissing"
+                ]
               }
             }
           ]
         }
-
 
   # 🔟 EventBridge Rule to Trigger Key Rotation Every 90 Days
   KeyRotationSchedule:
