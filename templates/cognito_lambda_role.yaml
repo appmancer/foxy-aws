@@ -52,6 +52,9 @@ Resources:
                   - "dynamodb:Scan"
                   - "dynamodb:UpdateItem"
                   - "dynamodb:DeleteItem"
+                  - "dynamodb:BatchGetItem"
+                  - "dynamodb:BatchPutItem"
+                  - "dynamodb:Query"
                 Resource:
                   - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/foxy_${EnvironmentName}_UserLookup"
                   - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/foxy_${EnvironmentName}_EventStore"
