@@ -255,7 +255,7 @@ deploy_stack DatabaseStack templates/database.yaml $CONFIG_FILE
 
 echo "Inserting default fees..."
 aws dynamodb put-item \
-  --table-name "foxy_${EnvironmentName}_Fees" \
+  --table-name "foxy_${ENVIRONMENT_NAME}_Fees" \
   --item '{
     "fee_type": {"S": "service_fee"},
     "valid_from": {"S": "2025-01-01T00:00:00Z"},
