@@ -77,8 +77,6 @@ Resources:
             ProjectionType: ALL
       BillingMode: PAY_PER_REQUEST
 
-      AWSTemplateFormatVersion: '2010-09-09'
-
   # DynamoDB Table for Default Fee Entries
   FoxyFeeTable:
     Type: AWS::DynamoDB::Table
