@@ -99,17 +99,6 @@ Resources:
         AttributeName: ttl
         Enabled: true
 
-  DefaultFeeEntry:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      TableName: !Sub "foxy_${EnvironmentName}_Fees"
-      Items:
-        - fee_type: "service_fee"
-          base_fee: 50
-          percentage_fee: 1
-          valid_from: "2025-01-01T00:00:00Z"
-
-
   # IAM Role for Application
   AppRole:
     Type: AWS::IAM::Role
