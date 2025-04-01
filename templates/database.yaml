@@ -108,8 +108,8 @@ Resources:
                   - dynamodb:Query
                 Resource:
                   - !GetAtt TransactionEventLogTable.Arn
-                  - !GetAtt TransactionStateViewTable.Arn
                   - !GetAtt FoxyUserLookupTable.Arn
+                  - !GetAtt FoxyFeeTable.Arn
     DeletionPolicy: Delete
 
   # IAM Role for Admin
@@ -148,7 +148,10 @@ Resources:
               - Effect: Allow
                 Action:
                   - dynamodb:Query
-                Resource: !GetAtt TransactionStateViewTable.Arn
+                Resource: 
+                  - !GetAtt TransactionEventLogTable.Arn
+                  - !GetAtt FoxyUserLookupTable.Arn
+                  - !GetAtt FoxyFeeTable.Arn
     DeletionPolicy: Delete
 
 Outputs:
@@ -160,10 +163,6 @@ Outputs:
   EventLogTableArn:
     Description: ARN of the DynamoDB Event Log Table
     Value: !GetAtt TransactionEventLogTable.Arn
-
-  StateViewTableName:
-    Description: Name of the DynamoDB State View Table
-    Value: !Ref TransactionStateViewTable
 
   UserLookupTableName:
     Description: Name of the DynamoDB User Lookup Table
