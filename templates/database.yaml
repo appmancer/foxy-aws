@@ -13,31 +13,15 @@ Resources:
     Type: AWS::DynamoDB::Table
     Properties:
       TableName: !Sub "foxy_${EnvironmentName}_TransactionEventLog"
-      AttributeDefinitions:
-        - AttributeName: PK
-          AttributeType: S
-        - AttributeName: SK
-          AttributeType: S
-      KeySchema:
-        - AttributeName: PK
-          KeyType: HASH
-        - AttributeName: SK
-          KeyType: RANGE
       BillingMode: PAY_PER_REQUEST
-
-  # DynamoDB State View Table
-  TransactionStateViewTable:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      TableName: !Sub "foxy_${EnvironmentName}_TransactionStateView"
       AttributeDefinitions:
         - AttributeName: PK
           AttributeType: S
         - AttributeName: SK
           AttributeType: S
-        - AttributeName: Status
+        - AttributeName: ToUserID
           AttributeType: S
-        - AttributeName: UpdatedAt
+        - AttributeName: CreatedAt
           AttributeType: S
       KeySchema:
         - AttributeName: PK
@@ -45,17 +29,18 @@ Resources:
         - AttributeName: SK
           KeyType: RANGE
       GlobalSecondaryIndexes:
-        - IndexName: GSI1-Status-UpdatedAt
+        - IndexName: GSI-ToUserID-CreatedAt
           KeySchema:
-            - AttributeName: Status
+            - AttributeName: ToUserID
               KeyType: HASH
-            - AttributeName: UpdatedAt
+            - AttributeName: CreatedAt
               KeyType: RANGE
           Projection:
             ProjectionType: ALL
-      BillingMode: PAY_PER_REQUEST
+      SSESpecification:
+        SSEEnabled: true
 
-  # New DynamoDB Table for Contact Discovery
+  # DynamoDB Table for Contact Discovery
   FoxyUserLookupTable:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -171,6 +156,10 @@ Outputs:
   EventLogTableName:
     Description: Name of the DynamoDB Event Log Table
     Value: !Ref TransactionEventLogTable
+
+  EventLogTableArn:
+    Description: ARN of the DynamoDB Event Log Table
+    Value: !GetAtt TransactionEventLogTable.Arn
 
   StateViewTableName:
     Description: Name of the DynamoDB State View Table
