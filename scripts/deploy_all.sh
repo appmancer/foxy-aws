@@ -260,7 +260,7 @@ aws dynamodb put-item \
     "fee_type": {"S": "service_fee"},
     "valid_from": {"S": "2025-01-01T00:00:00Z"},
     "base_fee": {"N": "0"},
-    "percentage_fee": {"N": "25"}
+    "percentage_fee": {"N": "200"}
   }'
 echo "✅ Complete."
 

@@ -50,6 +50,8 @@ Resources:
           AttributeType: S
         - AttributeName: user_id
           AttributeType: S
+        - AttributeName: wallet_address
+          AttributeType: S
       KeySchema:
         - AttributeName: hashed_phone
           KeyType: HASH
@@ -60,6 +62,12 @@ Resources:
               KeyType: HASH
           Projection:
             ProjectionType: ALL
+        - IndexName: WalletAddressIndex
+          KeySchema:
+            - AttributeName: wallet_address
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL 
       BillingMode: PAY_PER_REQUEST
 
   # DynamoDB Table for Default Fee Entries
