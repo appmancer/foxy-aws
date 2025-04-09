@@ -107,7 +107,7 @@ PARAMETERS_FILE=$CONFIG_FILE
 ENVIRONMENT=$(jq -r '.Environment' $PARAMETERS_FILE)
 REGION=$(jq -r '.Region' $PARAMETERS_FILE)
 ACCOUNT=$(jq -r '.Account' $PARAMETERS_FILE)
-ROLE_STACK=$(jq -r '.Stacks.RoleStack' $PARAMETERS_FILE)
+EXECUTION_ROLE_STACK=$(jq -r '.Stacks.ExecutionRoleStack' $PARAMETERS_FILE)
 USER_POOL_STACK=$(jq -r '.Stacks.UserPoolStack' $PARAMETERS_FILE)
 SERVICE_ACCOUNT_STACK=$(jq -r '.Stacks.ServiceAccountStack // empty' $PARAMETERS_FILE)
 CUSTOM_AUTH_STACK=$(jq -r '.Stacks.CustomAuthStack // empty' $PARAMETERS_FILE)
@@ -117,9 +117,8 @@ echo "Deploying queues..."
 deploy_stack QueueStack templates/queues.yaml $CONFIG_FILE
 echo "✅ Complete."
 
-# Step 1: Deploy the IAM Role stack
-echo "Deploying new IAM roles"
-echo "Deploying Lambda Role Stack..."
+# Step 1: Deploy the Role stack
+echo "Deploying Role Stack..."
 # This is the role that the lambda executes as
 deploy_stack RoleStack templates/roles.yaml $CONFIG_FILE
 if [ $? -ne 0 ]; then
@@ -184,63 +183,13 @@ echo "Deploying Service Accounts..."
 if [ -n "$SERVICE_ACCOUNT_STACK" ]; then
   deploy_stack ServiceAccountStack templates/create_service_accounts.yaml $CONFIG_FILE "RoleArn=$ROLE_ARN" "SQSRoleArn=$SQS_ROLE_ARN"
   
-  # Fetch access keys for the FoxyServiceAccount
-  COGNITO_USER=$(jq -r '.Parameters[] | select(.ParameterKey=="EnvironmentName") | .ParameterValue' "$CONFIG_FILE")-FoxyServiceAccount
-  echo "Fetching access keys for FoxyServiceAccount: $COGNITO_USER"
-  ACCESS_KEYS=$(aws iam create-access-key --user-name "$COGNITO_USER")
-  echo $ACCESS_KEYS
-  ACCESS_KEY_ID=$(echo "$ACCESS_KEYS" | jq -r '.AccessKey.AccessKeyId')
-  SECRET_ACCESS_KEY=$(echo "$ACCESS_KEYS" | jq -r '.AccessKey.SecretAccessKey')
-  SERVICE_ACCOUNT_ARN="arn:aws:iam::971422686568:user/${ENVIRONMENT_NAME}-FoxyServiceAccount"
-
-  # Generate trust-policy.json dynamically
-  cat > trust-policy.json <<-EOL
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "lambda.amazonaws.com"
-      },
-      "Action": "sts:AssumeRole"
-    },
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "${SERVICE_ACCOUNT_ARN}"
-      },
-      "Action": "sts:AssumeRole"
-    }
-  ]
-}
-EOL
-
-  # Update the trust policy
-  echo "Updating trust policy for FoxyLambdaExecutionRole..."
-  aws iam update-assume-role-policy \
-      --role-name "$ROLE_NAME" \
-      --policy-document file://trust-policy.json
-  if [ $? -ne 0 ]; then
-    echo "Failed to update trust policy. Exiting."
-    exit 1
-  fi
-
-  if [ $? -ne 0 ]; then
-    echo "Failed to deploy service account stack. Exiting."
-    exit 1
-  fi
-else
-  echo "No Service Account stack defined. Skipping deployment."
-fi
-echo "✅ Complete."
 
 # Step 4: Update the IAM Role stack
-echo "Updating Lambda Role Stack..."
-# Now that we have a rolestack and a service account, I need to patch the role stack to add the service account role to the trust policy
-deploy_stack RoleStack templates/patch.yaml $CONFIG_FILE
+echo "Updating SQS Role Stack..."
+# Now that we have an SQSRoleStack and a service account, I need to patch the role stack to add the service account role to the trust policy
+deploy_stack SQSRoleStack templates/patch.yaml $CONFIG_FILE
 if [ $? -ne 0 ]; then
-  echo "Failed to patch RoleStack stack. Exiting."
+  echo "Failed to patch SQSRoleStack stack. Exiting."
   exit 1
 fi
 echo "✅ Complete."
@@ -294,8 +243,12 @@ TIMESTAMP=$(date +%Y%m%d%H%M%S)
 deploy_stack APIGatewayStack templates/api_gateway.yaml $CONFIG_FILE "CustomAuthLambdaArn=$CUSTOM_AUTH_LAMBDA_ARN" "DeploymentTimestamp=$TIMESTAMP"
 echo "✅ Complete."
 
-# Cleanup
-rm -f $LAMBDA_CONFIG_FILE
+# Fetch access keys for the FoxyServiceAccount
+COGNITO_USER=$(jq -r '.Parameters[] | select(.ParameterKey=="EnvironmentName") | .ParameterValue' "$CONFIG_FILE")-FoxyServiceAccount
+echo "Fetching access keys for FoxyServiceAccount: $COGNITO_USER"
+ACCESS_KEYS=$(aws iam create-access-key --user-name "$COGNITO_USER")
+ACCESS_KEY_ID=$(echo "$ACCESS_KEYS" | jq -r '.AccessKey.AccessKeyId')
+SECRET_ACCESS_KEY=$(echo "$ACCESS_KEYS" | jq -r '.AccessKey.SecretAccessKey')
 
 echo "Access Key ID: $ACCESS_KEY_ID"
 echo "Secret Access Key: $SECRET_ACCESS_KEY"
