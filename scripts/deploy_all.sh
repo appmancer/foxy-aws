@@ -179,14 +179,14 @@ echo "Deploying Service Accounts..."
 if [ -n "$SERVICE_ACCOUNT_STACK" ]; then
   deploy_stack ServiceAccountStack templates/create_service_accounts.yaml $CONFIG_FILE "RoleArn=$ROLE_ARN" "SQSRoleArn=$SQS_ROLE_ARN"
   
-  # Fetch access keys for the CognitoServiceAccount
-  COGNITO_USER=$(jq -r '.Parameters[] | select(.ParameterKey=="EnvironmentName") | .ParameterValue' "$CONFIG_FILE")-CognitoServiceAccount
-  echo "Fetching access keys for CognitoServiceAccount: $COGNITO_USER"
+  # Fetch access keys for the FoxyServiceAccount
+  COGNITO_USER=$(jq -r '.Parameters[] | select(.ParameterKey=="EnvironmentName") | .ParameterValue' "$CONFIG_FILE")-FoxyServiceAccount
+  echo "Fetching access keys for FoxyServiceAccount: $COGNITO_USER"
   ACCESS_KEYS=$(aws iam create-access-key --user-name "$COGNITO_USER")
   echo $ACCESS_KEYS
   ACCESS_KEY_ID=$(echo "$ACCESS_KEYS" | jq -r '.AccessKey.AccessKeyId')
   SECRET_ACCESS_KEY=$(echo "$ACCESS_KEYS" | jq -r '.AccessKey.SecretAccessKey')
-  SERVICE_ACCOUNT_ARN="arn:aws:iam::971422686568:user/${ENVIRONMENT_NAME}-CognitoServiceAccount"
+  SERVICE_ACCOUNT_ARN="arn:aws:iam::971422686568:user/${ENVIRONMENT_NAME}-FoxyServiceAccount"
 
   # Generate trust-policy.json dynamically
   cat > trust-policy.json <<-EOL
