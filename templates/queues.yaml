@@ -24,26 +24,6 @@ Resources:
         deadLetterTargetArn: !GetAtt TransactionBroadcastDLQ.Arn
         maxReceiveCount: 5
 
-  # IAM Role for Lambda Functions to Access SQS
-  FoxyLambdaSQSRole:
-    Type: AWS::IAM::Role
-    Properties:
-      RoleName: !Sub Foxy-${EnvironmentName}-FoxyLambdaSQSRole
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: lambda.amazonaws.com
-            Action: sts:AssumeRole
-          - Effect: Allow
-            Principal:
-              AWS: arn:aws:iam::971422686568:user/dev-FoxyServiceAccount
-            Action: sts:AssumeRole
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/AmazonSQSFullAccess
-        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
-
 Outputs:
 
   BroadcastQueueURL:
@@ -53,10 +33,6 @@ Outputs:
   BroadcastDLQURL:
     Description: "URL of the Transaction Broadcast DLQ"
     Value: !Ref TransactionBroadcastDLQ
-
-  LambdaRoleArn:
-    Description: "ARN of the IAM Role for Lambda to access SQS"
-    Value: !GetAtt FoxyLambdaSQSRole.Arn
     
   TransactionBroadcastQueueArn:
     Description: ARN of the Transaction Broadcast Queue

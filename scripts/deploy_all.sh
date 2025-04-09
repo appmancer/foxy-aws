@@ -112,6 +112,11 @@ USER_POOL_STACK=$(jq -r '.Stacks.UserPoolStack' $PARAMETERS_FILE)
 SERVICE_ACCOUNT_STACK=$(jq -r '.Stacks.ServiceAccountStack // empty' $PARAMETERS_FILE)
 CUSTOM_AUTH_STACK=$(jq -r '.Stacks.CustomAuthStack // empty' $PARAMETERS_FILE)
 
+# Step 8: Deploying Queues
+echo "Deploying queues..."
+deploy_stack QueueStack templates/queues.yaml $CONFIG_FILE
+echo "✅ Complete."
+
 # Step 1: Deploy the IAM Role stack
 echo "Deploying new IAM roles"
 echo "Deploying Lambda Role Stack..."
@@ -212,7 +217,7 @@ if [ -n "$SERVICE_ACCOUNT_STACK" ]; then
 EOL
 
   # Update the trust policy
-  echo "Updating trust policy for CognitoLambdaExecutionRole..."
+  echo "Updating trust policy for FoxyLambdaExecutionRole..."
   aws iam update-assume-role-policy \
       --role-name "$ROLE_NAME" \
       --policy-document file://trust-policy.json
@@ -281,11 +286,6 @@ aws dynamodb put-item \
     "base_fee": {"N": "0"},
     "percentage_fee": {"N": "200"}
   }'
-echo "✅ Complete."
-
-# Step 8: Deploying Queues
-echo "Deploying queues..."
-deploy_stack QueueStack templates/queues.yaml $CONFIG_FILE
 echo "✅ Complete."
 
 # Step 9: Configuring API Gateway
