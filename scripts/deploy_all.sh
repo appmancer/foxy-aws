@@ -112,12 +112,12 @@ USER_POOL_STACK=$(jq -r '.Stacks.UserPoolStack' $PARAMETERS_FILE)
 SERVICE_ACCOUNT_STACK=$(jq -r '.Stacks.ServiceAccountStack // empty' $PARAMETERS_FILE)
 CUSTOM_AUTH_STACK=$(jq -r '.Stacks.CustomAuthStack // empty' $PARAMETERS_FILE)
 
-# Step 8: Deploying Queues
+# Step 1: Deploying Queues
 echo "Deploying queues..."
 deploy_stack QueueStack templates/queues.yaml $CONFIG_FILE
 echo "✅ Complete."
 
-# Step 1: Deploy the Role stack
+# Step 2: Deploy the Role stack
 echo "Deploying Role Stack..."
 # This is the role that the lambda executes as
 deploy_stack RoleStack templates/roles.yaml $CONFIG_FILE
@@ -167,7 +167,7 @@ if [ -z "$SQS_ROLE_ARN" ]; then
 fi
 echo "Fetched Foxy Lambda Role ARN: $SQS_ROLE_ARN"
 
-# Step 2: Deploy the Cognito User Pool stack
+# Step 3: Deploy the Cognito User Pool stack
 echo "Deploying Cognito User Pool stack..."
 deploy_stack UserPoolStack templates/cognito_user_pool.yaml $CONFIG_FILE
 
@@ -178,13 +178,18 @@ USER_POOL_ID=$(aws cloudformation describe-stacks \
   --region $REGION)
 echo "✅ Complete."
 
-# Step 3: Deploy the Service Accounts stack
+# Step 4: Deploy the Service Accounts stack
 echo "Deploying Service Accounts..."
 if [ -n "$SERVICE_ACCOUNT_STACK" ]; then
   deploy_stack ServiceAccountStack templates/create_service_accounts.yaml $CONFIG_FILE "RoleArn=$ROLE_ARN" "SQSRoleArn=$SQS_ROLE_ARN"
-  
+fi
+if [ $? -ne 0 ]; then
+  echo "Failed to deploy ServiceAccountStack stack. Exiting."
+  exit 1
+fi
+echo "✅ Complete."
 
-# Step 4: Update the IAM Role stack
+# Step 5: Update the IAM Role stack
 echo "Updating SQS Role Stack..."
 # Now that we have an SQSRoleStack and a service account, I need to patch the role stack to add the service account role to the trust policy
 deploy_stack SQSRoleStack templates/patch.yaml $CONFIG_FILE
@@ -194,12 +199,12 @@ if [ $? -ne 0 ]; then
 fi
 echo "✅ Complete."
 
-# Step 5: Deploy S3 Buckets
+# Step 6: Deploy S3 Buckets
 echo "Deploying S3 Buckets..."
 deploy_stack S3BucketStack templates/s3_buckets.yaml $CONFIG_FILE
 echo "Complete."
 
-# Step 6: Deploy Lambda Function
+# Step 7: Deploy Lambda Function
 echo "Deploying Lambda functions..."
 
 #Custom Auth
@@ -222,7 +227,7 @@ CUSTOM_AUTH_LAMBDA_ARN=$(aws cloudformation describe-stacks \
   --output text \
   --region $REGION)
 
-# Step 7: Deploy DynamoDB Database
+# Step 8: Deploy DynamoDB Database
 echo "Deploying database..."
 deploy_stack DatabaseStack templates/database.yaml $CONFIG_FILE
 
