@@ -68,8 +68,8 @@ Resources:
                 Action:
                   - "sqs:SendMessage"
                 Resource:
-                  - !ImportValue
-                      !Sub "${EnvironmentName}-TransactionBroadcastQueueArn"
+                  - !Sub "arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:Foxy-${EnvironmentName}-TransactionBroadcastQueue"
+
   FoxyLambdaSQSRole:
     Type: AWS::IAM::Role
     Properties:
