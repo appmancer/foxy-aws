@@ -1,0 +1,27 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Patches the FoxyLambdaSQSRole to allow dev-FoxyServiceAccount to assume it
+
+Parameters:
+  EnvironmentName:
+    Type: String
+    Description: Environment name (e.g., dev, staging, prod)
+
+Resources:
+  PatchFoxyLambdaSQSRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "Foxy-${EnvironmentName}-FoxyLambdaSQSRole"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+          - Effect: Allow
+            Principal:
+              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:user/${EnvironmentName}-FoxyServiceAccount"
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSQSFullAccess
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole

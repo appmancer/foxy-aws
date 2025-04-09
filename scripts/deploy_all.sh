@@ -230,12 +230,22 @@ else
 fi
 echo "✅ Complete."
 
-# Step n: Deploy S3 Buckets
+# Step 4: Update the IAM Role stack
+echo "Updating Lambda Role Stack..."
+# Now that we have a rolestack and a service account, I need to patch the role stack to add the service account role to the trust policy
+deploy_stack RoleStack templates/patch.yaml $CONFIG_FILE
+if [ $? -ne 0 ]; then
+  echo "Failed to patch RoleStack stack. Exiting."
+  exit 1
+fi
+echo "✅ Complete."
+
+# Step 5: Deploy S3 Buckets
 echo "Deploying S3 Buckets..."
 deploy_stack S3BucketStack templates/s3_buckets.yaml $CONFIG_FILE
 echo "Complete."
 
-# Step 4: Deploy Lambda Function
+# Step 6: Deploy Lambda Function
 echo "Deploying Lambda functions..."
 
 #Custom Auth
@@ -258,7 +268,7 @@ CUSTOM_AUTH_LAMBDA_ARN=$(aws cloudformation describe-stacks \
   --output text \
   --region $REGION)
 
-# Step 5: Deploy DynamoDB Database
+# Step 7: Deploy DynamoDB Database
 echo "Deploying database..."
 deploy_stack DatabaseStack templates/database.yaml $CONFIG_FILE
 
@@ -273,12 +283,12 @@ aws dynamodb put-item \
   }'
 echo "✅ Complete."
 
-# Step 6: Deploying Queues
+# Step 8: Deploying Queues
 echo "Deploying queues..."
 deploy_stack QueueStack templates/queues.yaml $CONFIG_FILE
 echo "✅ Complete."
 
-# Step 7: Configuring API Gateway
+# Step 9: Configuring API Gateway
 echo "Configuring API Gateway"
 TIMESTAMP=$(date +%Y%m%d%H%M%S)
 deploy_stack APIGatewayStack templates/api_gateway.yaml $CONFIG_FILE "CustomAuthLambdaArn=$CUSTOM_AUTH_LAMBDA_ARN" "DeploymentTimestamp=$TIMESTAMP"
