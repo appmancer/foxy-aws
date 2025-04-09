@@ -10,25 +10,12 @@ Parameters:
 Resources:
 
   # Dead Letter Queues
-  TransactionSigningDLQ:
-    Type: AWS::SQS::Queue
-    Properties:
-      QueueName: !Sub Foxy-${EnvironmentName}-TransactionSigningDLQ
-
   TransactionBroadcastDLQ:
     Type: AWS::SQS::Queue
     Properties:
       QueueName: !Sub Foxy-${EnvironmentName}-TransactionBroadcastDLQ
 
   # Main Queues with DLQ Redrive Policy
-  TransactionSigningQueue:
-    Type: AWS::SQS::Queue
-    Properties:
-      QueueName: !Sub Foxy-${EnvironmentName}-TransactionSigningQueue
-      RedrivePolicy:
-        deadLetterTargetArn: !GetAtt TransactionSigningDLQ.Arn
-        maxReceiveCount: 5
-
   TransactionBroadcastQueue:
     Type: AWS::SQS::Queue
     Properties:
@@ -59,17 +46,9 @@ Resources:
 
 Outputs:
 
-  SigningQueueURL:
-    Description: "URL of the Transaction Signing Queue"
-    Value: !Ref TransactionSigningQueue
-
   BroadcastQueueURL:
     Description: "URL of the Transaction Broadcast Queue"
     Value: !Ref TransactionBroadcastQueue
-
-  SigningDLQURL:
-    Description: "URL of the Transaction Signing DLQ"
-    Value: !Ref TransactionSigningDLQ
 
   BroadcastDLQURL:
     Description: "URL of the Transaction Broadcast DLQ"
