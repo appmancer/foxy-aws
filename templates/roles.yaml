@@ -1,5 +1,5 @@
 Parameters:
-  ExportName:
+  FoxyLambdaExportName:
     Type: String
     Description: The name of the export for the Foxy Lambda Execution Role
   EnvironmentName:
@@ -18,7 +18,7 @@ Resources:
               Service:
                 - lambda.amazonaws.com
             Action: sts:AssumeRole
-      RoleName: !Sub Foxy-${EnvironmentName}-Cognito-Lambda-ExecutionRole
+      RoleName: !Sub Foxy-${EnvironmentName}-Lambda-ExecutionRole
       Path: "/"
       Policies:
         - PolicyName: "CognitoFullAccessPolicy"
@@ -93,11 +93,11 @@ Outputs:
     Description: The ARN of the Foxy Lambda Execution Role
     Value: !GetAtt FoxyLambdaExecutionRole.Arn
 
-  FoxyoLambdaExecutionRoleName:
+  FoxyLambdaExecutionRoleName:
     Description: The name of the Foxy Lambda Execution Role
     Value: !Ref FoxyLambdaExecutionRole
     Export:
-      Name: !Sub "Foxy-${EnvironmentName}-Foxy-Lambda-ExecutionRoleName"
+      Name: !Sub "Foxy-${EnvironmentName}-Lambda-ExecutionRoleName"
 
   FoxyLambdaSQSRoleArn:
     Value: !GetAtt FoxyLambdaSQSRole.Arn

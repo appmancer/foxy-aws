@@ -25,11 +25,11 @@
     },
     {
       "ParameterKey": "FoxyLambdaExportName",
-      "ParameterValue": "Foxy-dev-Foxy-Lambda-ExecutionRoleName"
+      "ParameterValue": "Foxy-dev-Lambda-ExecutionRoleName"
     },
     {
       "ParameterKey": "SQSExportName",
-      "ParameterValue": "Foxy-dev-Foxy-Lambda-ExecutionRoleName"
+      "ParameterValue": "Foxy-dev-SQSRoleName"
     },
     {
       "ParameterKey": "GitHubOrg",

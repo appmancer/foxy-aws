@@ -143,8 +143,8 @@ echo "✅ Complete."
 # echo "Complete"
 
 # Fetch the exported Role ARN
-SQS_ROLE_EXPORT_NAME=$(jq -r '.Parameters[] | select(.ParameterKey=="FoxyLambdaExportName") | .ParameterValue' "$CONFIG_FILE")
-LAMBDA_ROLE_EXPORT_NAME=$(jq -r '.Parameters[] | select(.ParameterKey=="SQSExportName") | .ParameterValue' "$CONFIG_FILE")
+SQS_ROLE_EXPORT_NAME=$(jq -r '.Parameters[] | select(.ParameterKey=="SQSExportName") | .ParameterValue' "$CONFIG_FILE")
+LAMBDA_ROLE_EXPORT_NAME=$(jq -r '.Parameters[] | select(.ParameterKey=="FoxyLambdaExportName") | .ParameterValue' "$CONFIG_FILE")
 ENVIRONMENT_NAME=$(jq -r '.Parameters[] | select(.ParameterKey=="EnvironmentName") | .ParameterValue' "$CONFIG_FILE")
 ROLE_NAME=$(aws cloudformation list-exports --query "Exports[?Name=='${LAMBDA_ROLE_EXPORT_NAME}'].Value" --output text)
 SQS_ROLE_NAME=$(aws cloudformation list-exports --query "Exports[?Name=='${SQS_ROLE_EXPORT_NAME}'].Value" --output text)
