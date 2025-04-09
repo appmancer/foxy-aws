@@ -190,11 +190,11 @@ fi
 echo "✅ Complete."
 
 # Step 5: Update the IAM Role stack
-echo "Updating SQS Role Stack..."
-# Now that we have an SQSRoleStack and a service account, I need to patch the role stack to add the service account role to the trust policy
-deploy_stack SQSRoleStack templates/patch.yaml $CONFIG_FILE
+echo "Updating Role Stack..."
+# Now that we have an RoleStack and a service account, I need to patch the role stack to add the service account role to the trust policy
+deploy_stack RoleStack templates/patch.yaml $CONFIG_FILE
 if [ $? -ne 0 ]; then
-  echo "Failed to patch SQSRoleStack stack. Exiting."
+  echo "Failed to patch RoleStack stack. Exiting."
   exit 1
 fi
 echo "✅ Complete."
