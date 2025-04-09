@@ -177,7 +177,7 @@ echo "✅ Complete."
 # Step 3: Deploy the Service Accounts stack
 echo "Deploying Service Accounts..."
 if [ -n "$SERVICE_ACCOUNT_STACK" ]; then
-  deploy_stack ServiceAccountStack templates/create_service_accounts.yaml $CONFIG_FILE "RoleArn=$ROLE_ARN"
+  deploy_stack ServiceAccountStack templates/create_service_accounts.yaml $CONFIG_FILE "RoleArn=$ROLE_ARN" "SQSRoleArn=$SQS_ROLE_ARN"
   
   # Fetch access keys for the CognitoServiceAccount
   COGNITO_USER=$(jq -r '.Parameters[] | select(.ParameterKey=="EnvironmentName") | .ParameterValue' "$CONFIG_FILE")-CognitoServiceAccount

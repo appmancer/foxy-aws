@@ -170,7 +170,7 @@ echo "Detaching policies and deleting Lambda execution role..."
 echo "Waiting for stacks to be deleted..."
 echo "Deleting IAM Role stack..."
 if [ -n "$ROLE_STACK" ]; then
-  remove_policies $ROLE_STACK CognitoLambdaExecutionRoleName
+  remove_policies $ROLE_STACK FoxyLambdaExecutionRoleName
   delete_stack $ROLE_STACK
 fi
 
