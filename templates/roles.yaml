@@ -1,13 +1,13 @@
 Parameters:
   ExportName:
     Type: String
-    Description: The name of the export for the Cognito Lambda Execution Role
+    Description: The name of the export for the Foxy Lambda Execution Role
   EnvironmentName:
     Type: String
     Description: The name of the environment (e.g., dev, staging, production)
 
 Resources:
-  CognitoLambdaExecutionRole:
+  FoxyLambdaExecutionRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
@@ -69,15 +69,37 @@ Resources:
                   - "sqs:SendMessage"
                 Resource:
                   - !Sub "arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:Foxy-${EnvironmentName}-TransactionBroadcastQueue"
-
+  FoxyLambdaSQSRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub Foxy-${EnvironmentName}-FoxyLambdaSQSRole
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+          - Effect: Allow
+            Principal:
+              AWS: !Sub arn:aws:iam::${AWS::AccountId}:user/${EnvironmentName}-FoxyServiceAccount
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSQSFullAccess
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
 
 Outputs:
-  RoleArn:
-    Description: The ARN of the Cognito Lambda Execution Role
-    Value: !GetAtt CognitoLambdaExecutionRole.Arn
+  FoxyLambdaRoleArn:
+    Description: The ARN of the Foxy Lambda Execution Role
+    Value: !GetAtt FoxyLambdaExecutionRole.Arn
 
-  CognitoLambdaExecutionRoleName:
-    Description: The name of the Cognito Lambda Execution Role
-    Value: !Ref CognitoLambdaExecutionRole
+  FoxyoLambdaExecutionRoleName:
+    Description: The name of the Foxy Lambda Execution Role
+    Value: !Ref FoxyLambdaExecutionRole
     Export:
-      Name: !Sub "Foxy-${EnvironmentName}-Cognito-Lambda-ExecutionRoleName"
+      Name: !Sub "Foxy-${EnvironmentName}-Foxy-Lambda-ExecutionRoleName"
+
+  FoxyLambdaSQSRoleArn:
+    Value: !GetAtt FoxyLambdaSQSRole.Arn
+    Export:
+      Name: !Sub ${EnvironmentName}-FoxyLambdaSQSRoleArn

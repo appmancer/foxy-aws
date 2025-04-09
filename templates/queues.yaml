@@ -38,7 +38,7 @@ Resources:
             Action: sts:AssumeRole
           - Effect: Allow
             Principal:
-              AWS: arn:aws:iam::971422686568:user/dev-CognitoServiceAccount
+              AWS: arn:aws:iam::971422686568:user/dev-FoxyServiceAccount
             Action: sts:AssumeRole
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AmazonSQSFullAccess

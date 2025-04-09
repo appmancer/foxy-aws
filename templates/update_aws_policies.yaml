@@ -8,7 +8,7 @@ Resources:
           - Effect: Allow
             Principal:
               AWS:
-                - !Sub "arn:aws:iam::${AWS::AccountId}:user/dev-CognitoServiceAccount"
+                - !Sub "arn:aws:iam::${AWS::AccountId}:user/dev-FoxyServiceAccount"
             Action: sts:AssumeRole
       Path: "/"
       Policies:

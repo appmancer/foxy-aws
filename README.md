@@ -156,7 +156,7 @@ Deletes all unused security groups.
 
 ## Access Key Retrieval
 
-The script will automatically fetch access keys for the created `CognitoServiceAccount` and display them after stack creation. Example output:
+The script will automatically fetch access keys for the created `FoxyServiceAccount` and display them after stack creation. Example output:
 
 ```
 Access Key ID: AKIAIOSFODNN7EXAMPLE

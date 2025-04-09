@@ -114,11 +114,11 @@ CUSTOM_AUTH_STACK=$(jq -r '.Stacks.CustomAuthStack // empty' $PARAMETERS_FILE)
 
 # Step 1: Deploy the IAM Role stack
 echo "Deploying new IAM roles"
-echo "Deploying Cognito Role Stack..."
-# This is the role that the Cognito lambda executes as
-deploy_stack CognitoRoleStack templates/cognito_lambda_role.yaml $CONFIG_FILE
+echo "Deploying Lambda Role Stack..."
+# This is the role that the lambda executes as
+deploy_stack RoleStack templates/roles.yaml $CONFIG_FILE
 if [ $? -ne 0 ]; then
-  echo "Failed to deploy CognitoRoleStack stack. Exiting."
+  echo "Failed to deploy RoleStack stack. Exiting."
   exit 1
 fi
 echo "✅ Complete."
@@ -143,16 +143,25 @@ echo "✅ Complete."
 # echo "Complete"
 
 # Fetch the exported Role ARN
-ROLE_EXPORT_NAME=$(jq -r '.Parameters[] | select(.ParameterKey=="ExportName") | .ParameterValue' "$CONFIG_FILE")
+SQS_ROLE_EXPORT_NAME=$(jq -r '.Parameters[] | select(.ParameterKey=="FoxyLambdaExportName") | .ParameterValue' "$CONFIG_FILE")
+LAMBDA_ROLE_EXPORT_NAME=$(jq -r '.Parameters[] | select(.ParameterKey=="SQSExportName") | .ParameterValue' "$CONFIG_FILE")
 ENVIRONMENT_NAME=$(jq -r '.Parameters[] | select(.ParameterKey=="EnvironmentName") | .ParameterValue' "$CONFIG_FILE")
-ROLE_NAME=$(aws cloudformation list-exports --query "Exports[?Name=='${ROLE_EXPORT_NAME}'].Value" --output text)
+ROLE_NAME=$(aws cloudformation list-exports --query "Exports[?Name=='${LAMBDA_ROLE_EXPORT_NAME}'].Value" --output text)
+SQS_ROLE_NAME=$(aws cloudformation list-exports --query "Exports[?Name=='${SQS_ROLE_EXPORT_NAME}'].Value" --output text)
 AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query "Account" --output text)
 ROLE_ARN="arn:aws:iam::${AWS_ACCOUNT_ID}:role/${ROLE_NAME}"
+SQS_ROLE_ARN="arn:aws:iam::${AWS_ACCOUNT_ID}:role/${SQS_ROLE_NAME}"
+
 if [ -z "$ROLE_ARN" ]; then
-  echo "Failed to fetch the Cognito Lambda Execution Role ARN. Aborting."
+  echo "Failed to fetch the Foxy Lambda Execution Role ARN. Aborting."
   exit 1
 fi
-echo "Fetched Role ARN: $ROLE_ARN"
+echo "Fetched Foxy Lambda Role ARN: $ROLE_ARN"
+if [ -z "$SQS_ROLE_ARN" ]; then
+  echo "Failed to fetch the Foxy SQS Execution Role ARN. Aborting."
+  exit 1
+fi
+echo "Fetched Foxy Lambda Role ARN: $SQS_ROLE_ARN"
 
 # Step 2: Deploy the Cognito User Pool stack
 echo "Deploying Cognito User Pool stack..."
