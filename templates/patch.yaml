@@ -7,7 +7,7 @@ Parameters:
     Description: Environment name (e.g., dev, staging, prod)
 
 Resources:
-  PatchFoxyLambdaSQSRole:
+  FoxyLambdaSQSRole:
     Type: AWS::IAM::Role
     Properties:
       RoleName: !Sub "Foxy-${EnvironmentName}-FoxyLambdaSQSRole"
