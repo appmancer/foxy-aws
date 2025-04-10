@@ -103,6 +103,10 @@ Resources:
           AttributeDataType: "String"
           Mutable: true
           Required: false
+        - Name: "default_currency"
+          AttributeDataType: "String"
+          Mutable: true
+          Required: false
       Policies:
         PasswordPolicy:
           MinimumLength: 8

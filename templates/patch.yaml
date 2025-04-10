@@ -109,4 +109,9 @@ Outputs:
     Value: !GetAtt FoxyLambdaSQSRole.Arn
     Export:
       Name: !Sub ${EnvironmentName}-FoxyLambdaSQSRoleArn
-      
+
+  FoxyLambdaSQSRoleName:
+    Description: The name of the Foxy Lambda Execution Role
+    Value: !Ref FoxyLambdaExecutionRole
+    Export:
+      Name: !Sub "Foxy-${EnvironmentName}-FoxyLambdaSQSRoleName"
