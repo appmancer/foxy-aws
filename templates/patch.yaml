@@ -83,25 +83,28 @@ Resources:
         Version: "2012-10-17"
         Statement:
           - Effect: Allow
-            Principal:
+           Principal:
               Service: lambda.amazonaws.com
             Action: sts:AssumeRole
           - Effect: Allow
             Principal:
               AWS: !Sub "arn:aws:iam::${AWS::AccountId}:user/${EnvironmentName}-FoxyServiceAccount"
             Action: sts:AssumeRole
-      Policies:      
-        PolicyDocument:
-          Version: "2012-10-17"
-          Statement:
-            - Effect: Allow
-              Action:
-                - cloudwatch:PutMetricData
-              Resource: "*"
+
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AmazonSQSFullAccess
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
 
+      Policies:
+        - PolicyName: CloudWatchMetricsAccess
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - cloudwatch:PutMetricData
+                Resource: "*"
+                
 Outputs:
   FoxyLambdaRoleArn:
     Description: The ARN of the Foxy Lambda Execution Role
