@@ -112,6 +112,6 @@ Outputs:
 
   FoxyLambdaSQSRoleName:
     Description: The name of the Foxy Lambda Execution Role
-    Value: !Ref FoxyLambdaExecutionRole
+    Value: !Ref FoxyLambdaSQSRole
     Export:
       Name: !Sub "Foxy-${EnvironmentName}-FoxyLambdaSQSRoleName"
