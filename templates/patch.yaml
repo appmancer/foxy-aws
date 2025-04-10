@@ -1,16 +1,19 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: Patches the FoxyLambdaSQSRole to allow dev-FoxyServiceAccount to assume it
-
 Parameters:
+  FoxyLambdaExportName:
+    Type: String
+    Description: The name of the export for the Foxy Lambda Execution Role
   EnvironmentName:
     Type: String
-    Description: Environment name (e.g., dev, staging, prod)
+    Description: The name of the environment (e.g., dev, staging, production)
 
 Resources:
   FoxyLambdaExecutionRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub "Foxy-${EnvironmentName}-Lambda-ExecutionRole"
+      RoleName: !Sub Foxy-${EnvironmentName}-Lambda-ExecutionRole
+      Path: "/"
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -22,10 +25,60 @@ Resources:
             Principal:
               AWS: !Sub "arn:aws:iam::${AWS::AccountId}:user/${EnvironmentName}-FoxyServiceAccount"
             Action: sts:AssumeRole
+      Policies:
+        - PolicyName: "CognitoFullAccessPolicy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "cognito-idp:AdminCreateUser"
+                  - "cognito-idp:AdminInitiateAuth"
+                  - "cognito-idp:ListUsers"
+                  - "cognito-idp:AdminSetUserPassword"
+                  - "cognito-idp:AdminGetUser"
+                  - "cognito-idp:AdminUpdateUserAttributes"
+                  - "cognito-idp:ListUserPools"
+                  - "cognito-idp:DescribeUserPool"
+                Resource: !Sub "arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/*"
+              - Effect: Allow
+                Action:
+                  - "logs:CreateLogGroup"
+                  - "logs:CreateLogStream"
+                  - "logs:PutLogEvents"
+                Resource: 
+                  - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/Foxy-${EnvironmentName}-Lambda:*"
+              - Effect: Allow
+                Action:
+                  - "cloudwatch:PutMetricData"
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - "dynamodb:PutItem"
+                  - "dynamodb:GetItem"
+                  - "dynamodb:Scan"
+                  - "dynamodb:UpdateItem"
+                  - "dynamodb:DeleteItem"
+                  - "dynamodb:BatchGetItem"
+                  - "dynamodb:BatchPutItem"
+                  - "dynamodb:Query"
+                Resource:
+                  - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/foxy_${EnvironmentName}_UserLookup"
+                  - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/foxy_${EnvironmentName}_EventStore"
+                  - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/foxy_${EnvironmentName}_MaterializedView"
+                  - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/foxy_${EnvironmentName}_TransactionEventLog"
+                  - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/foxy_${EnvironmentName}_TransactionStateView"
+                  - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/foxy_${EnvironmentName}_Fees"
+              - Effect: Allow
+                Action:
+                  - "sqs:SendMessage"
+                Resource:
+                  - !Sub "arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:Foxy-${EnvironmentName}-TransactionBroadcastQueue"
+
   FoxyLambdaSQSRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub "Foxy-${EnvironmentName}-FoxyLambdaSQSRole"
+      RoleName: !Sub Foxy-${EnvironmentName}-FoxyLambdaSQSRole
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -37,7 +90,10 @@ Resources:
             Principal:
               AWS: !Sub "arn:aws:iam::${AWS::AccountId}:user/${EnvironmentName}-FoxyServiceAccount"
             Action: sts:AssumeRole
-  
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSQSFullAccess
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
 Outputs:
   FoxyLambdaRoleArn:
     Description: The ARN of the Foxy Lambda Execution Role
@@ -53,3 +109,4 @@ Outputs:
     Value: !GetAtt FoxyLambdaSQSRole.Arn
     Export:
       Name: !Sub ${EnvironmentName}-FoxyLambdaSQSRoleArn
+      
