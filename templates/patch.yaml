@@ -37,3 +37,19 @@ Resources:
             Principal:
               AWS: !Sub "arn:aws:iam::${AWS::AccountId}:user/${EnvironmentName}-FoxyServiceAccount"
             Action: sts:AssumeRole
+  
+Outputs:
+  FoxyLambdaRoleArn:
+    Description: The ARN of the Foxy Lambda Execution Role
+    Value: !GetAtt FoxyLambdaExecutionRole.Arn
+
+  FoxyLambdaExecutionRoleName:
+    Description: The name of the Foxy Lambda Execution Role
+    Value: !Ref FoxyLambdaExecutionRole
+    Export:
+      Name: !Sub "Foxy-${EnvironmentName}-Lambda-ExecutionRoleName"
+
+  FoxyLambdaSQSRoleArn:
+    Value: !GetAtt FoxyLambdaSQSRole.Arn
+    Export:
+      Name: !Sub ${EnvironmentName}-FoxyLambdaSQSRoleArn
