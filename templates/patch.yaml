@@ -83,7 +83,7 @@ Resources:
         Version: "2012-10-17"
         Statement:
           - Effect: Allow
-           Principal:
+            Principal:
               Service: lambda.amazonaws.com
             Action: sts:AssumeRole
           - Effect: Allow
@@ -104,7 +104,7 @@ Resources:
                 Action:
                   - cloudwatch:PutMetricData
                 Resource: "*"
-                
+
 Outputs:
   FoxyLambdaRoleArn:
     Description: The ARN of the Foxy Lambda Execution Role
