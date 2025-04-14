@@ -44,7 +44,7 @@ Resources:
   TransactionStatusViewTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: !Sub "Foxy-${EnvironmentName}-TransactionStatusView"
+      TableName: !Sub "foxy-${EnvironmentName}-TransactionStatusView"
       BillingMode: PAY_PER_REQUEST
       AttributeDefinitions:
         - AttributeName: PK
