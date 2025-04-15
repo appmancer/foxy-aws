@@ -37,11 +37,14 @@ deploy_stack() {
   local TEMPLATE_FILE=$2
   local CONFIG_FILE=$3
   shift 3  # Shift past the first three arguments to capture any additional parameters
+  
+  local REGION
+  REGION=$(jq -r '.Region' $CONFIG_FILE)
 
   # Extract stack name from config file
   local STACK_NAME
   STACK_NAME=$(jq -r ".Stacks[\"$STACK_KEY\"]" "$CONFIG_FILE")
-
+  
   if [ -z "$STACK_NAME" ] || [ "$STACK_NAME" == "null" ]; then
     echo "Error: Stack key '$STACK_KEY' not found in config file."
     return 1
@@ -65,11 +68,11 @@ deploy_stack() {
 
   # Deploy CloudFormation stack
   aws cloudformation deploy \
+    --region "$REGION" \
     --stack-name "$STACK_NAME" \
     --template-file "$TEMPLATE_FILE" \
     --parameter-overrides $PARAMETERS \
-    --capabilities CAPABILITY_NAMED_IAM \
-    --region eu-north-1
+    --capabilities CAPABILITY_NAMED_IAM 
 
   # Report the outputs to the console
   aws cloudformation describe-stacks \

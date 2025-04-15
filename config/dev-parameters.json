@@ -1,7 +1,7 @@
 {
   "Environment": "Development",
-  "Region": "eu-north-1",
-  "Account": 971422686568,
+  "Region": "eu-west-1",
+  "Account": 244370290519,
   "Stacks": {
     "RoleStack": "foxy-dev-role",
     "GitHubLambdaDeployRoleStack": "foxy-dev-github-lambda-deploy-role",
