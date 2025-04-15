@@ -115,6 +115,8 @@ USER_POOL_STACK=$(jq -r '.Stacks.UserPoolStack' $PARAMETERS_FILE)
 SERVICE_ACCOUNT_STACK=$(jq -r '.Stacks.ServiceAccountStack // empty' $PARAMETERS_FILE)
 CUSTOM_AUTH_STACK=$(jq -r '.Stacks.CustomAuthStack // empty' $PARAMETERS_FILE)
 
+echo "Deploying to region: $REGION, account: $ACCOUNT, environment: $ENVIRONMENT"
+
 # Step 1: Deploying Queues
 echo "Deploying queues..."
 deploy_stack QueueStack templates/queues.yaml $CONFIG_FILE
