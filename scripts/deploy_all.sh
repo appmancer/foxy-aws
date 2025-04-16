@@ -38,9 +38,6 @@ deploy_stack() {
   local CONFIG_FILE=$3
   shift 3  # Shift past the first three arguments to capture any additional parameters
   
-  local REGION
-  REGION=$(jq -r '.Region' $CONFIG_FILE)
-
   # Extract stack name from config file
   local STACK_NAME
   STACK_NAME=$(jq -r ".Stacks[\"$STACK_KEY\"]" "$CONFIG_FILE")
@@ -73,6 +70,12 @@ deploy_stack() {
     --template-file "$TEMPLATE_FILE" \
     --parameter-overrides $PARAMETERS \
     --capabilities CAPABILITY_NAMED_IAM 
+
+  # Check if the stack creation was successful
+  echo "🔄 Waiting for stack '$STACK_NAME' to stabilize..."
+  aws cloudformation wait stack-create-complete \
+    --region "$REGION" \
+    --stack-name "$STACK_NAME"
 
   # Report the outputs to the console
   aws cloudformation describe-stacks \
@@ -216,7 +219,8 @@ echo "Deploying Lambda functions..."
 deploy_function ./scripts/custom_auth_lambda.py "foxy-${ENVIRONMENT_NAME}-lambda-deployments-${ACCOUNT}" "function.zip" $ENVIRONMENT_NAME
 deploy_stack CustomAuthStack templates/custom_auth_lambda.yaml $CONFIG_FILE "RoleArn=$ROLE_ARN" "UserPoolId=$USER_POOL_ID"
 
-# this used to work in cloudformation, but I've had to move it here.  TODO: fix.
+# this used to work in cloudformation, but I've had to move it here.  TODO: fix. Its a chicken and egg problem; the auth lambda needs to be 
+# deployed before the user pool is created, but the user pool id is needed to deploy the auth lambda
 
 CUSTOM_AUTH_LAMBDA_ARN="arn:aws:lambda:$REGION:$ACCOUNT:function:foxy-${ENVIRONMENT_NAME}-CognitoCustomAuthLambda"
 
@@ -228,7 +232,6 @@ aws cognito-idp update-user-pool \
     \"DefineAuthChallenge\": \"$CUSTOM_AUTH_LAMBDA_ARN\",
     \"VerifyAuthChallengeResponse\": \"$CUSTOM_AUTH_LAMBDA_ARN\"
   }"
-
 
 CUSTOM_AUTH_LAMBDA_ARN=$(aws cloudformation describe-stacks \
   --stack-name $CUSTOM_AUTH_STACK \
