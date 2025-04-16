@@ -218,13 +218,17 @@ deploy_stack CustomAuthStack templates/custom_auth_lambda.yaml $CONFIG_FILE "Rol
 
 # this used to work in cloudformation, but I've had to move it here.  TODO: fix.
 
+CUSTOM_AUTH_LAMBDA_ARN="arn:aws:lambda:$REGION:$ACCOUNT:function:foxy-${ENVIRONMENT_NAME}-CognitoCustomAuthLambda"
+
 aws cognito-idp update-user-pool \
-  --user-pool-id $USER_POOL_ID \
+  --region "$REGION" \
+  --user-pool-id "$USER_POOL_ID" \
   --lambda-config "{
-    \"CreateAuthChallenge\": \"arn:aws:lambda:eu-north-1:971422686568:function:foxy-${ENVIRONMENT_NAME}-CognitoCustomAuthLambda\",
-    \"DefineAuthChallenge\": \"arn:aws:lambda:eu-north-1:971422686568:function:foxy-${ENVIRONMENT_NAME}-CognitoCustomAuthLambda\",
-    \"VerifyAuthChallengeResponse\": \"arn:aws:lambda:eu-north-1:971422686568:function:foxy-${ENVIRONMENT_NAME}-CognitoCustomAuthLambda\"
+    \"CreateAuthChallenge\": \"$CUSTOM_AUTH_LAMBDA_ARN\",
+    \"DefineAuthChallenge\": \"$CUSTOM_AUTH_LAMBDA_ARN\",
+    \"VerifyAuthChallengeResponse\": \"$CUSTOM_AUTH_LAMBDA_ARN\"
   }"
+
 
 CUSTOM_AUTH_LAMBDA_ARN=$(aws cloudformation describe-stacks \
   --stack-name $CUSTOM_AUTH_STACK \
