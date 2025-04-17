@@ -41,36 +41,51 @@ Resources:
         SSEEnabled: true
 
   # DynamoDB Table for Transaction Materialized View
-  TransactionStatusViewTable:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      TableName: !Sub "foxy-${EnvironmentName}-TransactionStatusView"
-      BillingMode: PAY_PER_REQUEST
-      AttributeDefinitions:
-        - AttributeName: PK
-          AttributeType: S
-        - AttributeName: Status
-          AttributeType: S
-        - AttributeName: UpdatedAt
-          AttributeType: S
-      KeySchema:
-        - AttributeName: PK
-          KeyType: HASH
-      GlobalSecondaryIndexes:
-        - IndexName: StatusIndex
-          KeySchema:
-            - AttributeName: Status
-              KeyType: HASH
-            - AttributeName: UpdatedAt
-              KeyType: RANGE
-          Projection:
-            ProjectionType: ALL
-      Tags:
-        - Key: App
-          Value: Foxy
-        - Key: Environment
-          Value: !Ref Stage
-
+TransactionStatusViewTable:
+  Type: AWS::DynamoDB::Table
+  Properties:
+    TableName: !Sub "foxy-${EnvironmentName}-TransactionStatusView"
+    BillingMode: PAY_PER_REQUEST
+    AttributeDefinitions:
+      - AttributeName: PK
+        AttributeType: S
+      - AttributeName: Status
+        AttributeType: S
+      - AttributeName: UpdatedAt
+        AttributeType: S
+      - AttributeName: SenderAddress
+        AttributeType: S
+      - AttributeName: RecipientAddress
+        AttributeType: S
+    KeySchema:
+      - AttributeName: PK
+        KeyType: HASH
+    GlobalSecondaryIndexes:
+      - IndexName: StatusIndex
+        KeySchema:
+          - AttributeName: Status
+            KeyType: HASH
+          - AttributeName: UpdatedAt
+            KeyType: RANGE
+        Projection:
+          ProjectionType: ALL
+      - IndexName: SenderIndex
+        KeySchema:
+          - AttributeName: SenderAddress
+            KeyType: HASH
+        Projection:
+          ProjectionType: ALL
+      - IndexName: RecipientIndex
+        KeySchema:
+          - AttributeName: RecipientAddress
+            KeyType: HASH
+        Projection:
+          ProjectionType: ALL
+    Tags:
+      - Key: App
+        Value: Foxy
+      - Key: Environment
+        Value: !Ref EnvironmentName
 
   # DynamoDB Table for Contact Discovery
   FoxyUserLookupTable:

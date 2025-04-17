@@ -1,6 +1,41 @@
 #!/bin/bash
 
 set -e
+empty_bucket() {
+  BUCKET_NAME=$1
+  echo "Fast-emptying bucket $BUCKET_NAME..."
+
+  while true; do
+    OUTPUT=$(aws s3api list-object-versions --bucket "$BUCKET_NAME" --output json)
+
+    VERSIONS=$(echo "$OUTPUT" | jq -c '.Versions[]?')
+    DELETE_MARKERS=$(echo "$OUTPUT" | jq -c '.DeleteMarkers[]?')
+
+    if [[ -z "$VERSIONS" && -z "$DELETE_MARKERS" ]]; then
+      echo "Bucket is now empty."
+      break
+    fi
+
+    # Prepare a delete list
+    DELETE_LIST=$(jq -n --argjson versions "$VERSIONS" --argjson deleteMarkers "$DELETE_MARKERS" '
+      {
+        Objects: (
+          ($versions // []) + ($deleteMarkers // [])
+          | map({Key: .Key, VersionId: .VersionId})
+        )
+      }
+    ')
+
+    # Save to a temp file because aws cli --delete requires a file or inline JSON
+    TMPFILE=$(mktemp)
+    echo "$DELETE_LIST" > "$TMPFILE"
+
+    echo "Deleting batch of $(jq '.Objects | length' "$TMPFILE") objects..."
+    aws s3api delete-objects --bucket "$BUCKET_NAME" --delete file://"$TMPFILE"
+
+    rm "$TMPFILE"
+  done
+}
 
 remove_policies(){
   local STACK=$1
@@ -269,34 +304,10 @@ fi
 # empty the bucket first
 BUCKET_NAME="foxy-${ENVIRONMENT_NAME}-lambda-deployments-${ACCOUNT}"
 
-# Check if the bucket exists
 if aws s3api head-bucket --bucket "$BUCKET_NAME" 2>/dev/null; then
-  echo "Bucket $BUCKET_NAME exists. Emptying it..."
-  echo "Deleting all object versions from $BUCKET_NAME..."
-
-  # Delete all object versions
-  aws s3api list-object-versions --bucket "$BUCKET_NAME" --query 'Versions[].{Key:Key,VersionId:VersionId}' --output text |
-  while read -r Key VersionId; do
-    if [[ -n "$VersionId" ]]; then
-      echo "Deleting object: $Key (VersionId: $VersionId)"
-      aws s3api delete-object --bucket "$BUCKET_NAME" --key "$Key" --version-id "$VersionId"
-    fi
-  done
-
-  echo "Deleting all delete markers from $BUCKET_NAME..."
-
-  # Delete all delete markers
-  aws s3api list-object-versions --bucket "$BUCKET_NAME" --query 'DeleteMarkers[].{Key:Key,VersionId:VersionId}' --output text |
-  while read -r Key VersionId; do
-    if [[ -n "$VersionId" ]]; then
-      echo "Deleting delete marker: $Key (VersionId: $VersionId)"
-      aws s3api delete-object --bucket "$BUCKET_NAME" --key "$Key" --version-id "$VersionId"
-    fi
-  done
-
-  echo "Bucket $BUCKET_NAME is now empty."
+  empty_bucket "$BUCKET_NAME"
 else
-  echo "Bucket $BUCKET_NAME does not exist. Skipping deletion."
+  echo "Bucket $BUCKET_NAME does not exist. Skipping."
 fi
 
 if [ -n "$BUCKET_STACK" ]; then
