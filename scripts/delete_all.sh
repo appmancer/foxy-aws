@@ -1,6 +1,7 @@
 #!/bin/bash
 
 set -e
+
 empty_bucket() {
   BUCKET_NAME=$1
   echo "Fast-emptying bucket $BUCKET_NAME..."
@@ -8,34 +9,40 @@ empty_bucket() {
   while true; do
     OUTPUT=$(aws s3api list-object-versions --bucket "$BUCKET_NAME" --output json)
 
-    VERSIONS=$(echo "$OUTPUT" | jq -c '.Versions[]?')
-    DELETE_MARKERS=$(echo "$OUTPUT" | jq -c '.DeleteMarkers[]?')
+    # Extract objects and markers separately
+    VERSIONS=$(echo "$OUTPUT" | jq '.Versions // []')
+    DELETE_MARKERS=$(echo "$OUTPUT" | jq '.DeleteMarkers // []')
 
-    if [[ -z "$VERSIONS" && -z "$DELETE_MARKERS" ]]; then
-      echo "Bucket is now empty."
+    # If both are empty, break
+    VERSIONS_LENGTH=$(echo "$VERSIONS" | jq 'length')
+    DELETE_MARKERS_LENGTH=$(echo "$DELETE_MARKERS" | jq 'length')
+    if [ "$VERSIONS_LENGTH" -eq 0 ] && [ "$DELETE_MARKERS_LENGTH" -eq 0 ]; then
+      echo "No more objects to delete."
       break
     fi
 
-    # Prepare a delete list
+    # Build a combined delete list
     DELETE_LIST=$(jq -n --argjson versions "$VERSIONS" --argjson deleteMarkers "$DELETE_MARKERS" '
       {
         Objects: (
-          ($versions // []) + ($deleteMarkers // [])
+          ($versions + $deleteMarkers)
           | map({Key: .Key, VersionId: .VersionId})
         )
       }
     ')
 
-    # Save to a temp file because aws cli --delete requires a file or inline JSON
+    # Save to a temp file
     TMPFILE=$(mktemp)
     echo "$DELETE_LIST" > "$TMPFILE"
 
-    echo "Deleting batch of $(jq '.Objects | length' "$TMPFILE") objects..."
+    COUNT=$(jq '.Objects | length' "$TMPFILE")
+    echo "Deleting $COUNT objects..."
     aws s3api delete-objects --bucket "$BUCKET_NAME" --delete file://"$TMPFILE"
 
     rm "$TMPFILE"
   done
 }
+
 
 remove_policies(){
   local STACK=$1
