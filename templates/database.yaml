@@ -163,6 +163,7 @@ TransactionStatusViewTable:
                   - dynamodb:Query
                 Resource:
                   - !GetAtt TransactionEventLogTable.Arn
+                  - !GetAtt TransactionStatusViewTable.Arn 
                   - !GetAtt FoxyUserLookupTable.Arn
                   - !GetAtt FoxyFeeTable.Arn
     DeletionPolicy: Delete
@@ -205,6 +206,7 @@ TransactionStatusViewTable:
                   - dynamodb:Query
                 Resource: 
                   - !GetAtt TransactionEventLogTable.Arn
+                  - !GetAtt TransactionStatusViewTable.Arn 
                   - !GetAtt FoxyUserLookupTable.Arn
                   - !GetAtt FoxyFeeTable.Arn
     DeletionPolicy: Delete
@@ -222,6 +224,15 @@ Outputs:
   UserLookupTableName:
     Description: Name of the DynamoDB User Lookup Table
     Value: !Ref FoxyUserLookupTable
+    
+  TransactionStatusViewTableName:
+    Description: Name of the DynamoDB Transaction Status View Table
+    Value: !Ref TransactionStatusViewTable
+
+  TransactionStatusViewTableArn:
+    Description: ARN of the DynamoDB Transaction Status View Table
+    Value: !GetAtt TransactionStatusViewTable.Arn
+
 
   AppRoleARN:
     Description: ARN of the Application IAM Role
