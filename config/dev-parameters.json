@@ -13,6 +13,7 @@
     "CustomAuthStack": "foxy-dev-custom-auth",
     "S3BucketStack": "foxy-dev-s3-buckets",
     "APIGatewayStack": "foxy-dev-api-gateway"
+    "SecretStack": "foxy-dev-secrets",
   },
   "Parameters": [
     {

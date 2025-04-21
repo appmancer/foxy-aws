@@ -260,6 +260,11 @@ TIMESTAMP=$(date +%Y%m%d%H%M%S)
 deploy_stack APIGatewayStack templates/api_gateway.yaml $CONFIG_FILE "CustomAuthLambdaArn=$CUSTOM_AUTH_LAMBDA_ARN" "DeploymentTimestamp=$TIMESTAMP"
 echo "✅ Complete."
 
+# Step 10: Deploy Secrets Manager
+echo "Deploying Secrets Manager..."
+deploy_stack SecretStack templates/secrets.yaml $CONFIG_FILE 
+echo "✅ Complete."
+
 # Fetch access keys for the FoxyServiceAccount
 COGNITO_USER=$(jq -r '.Parameters[] | select(.ParameterKey=="EnvironmentName") | .ParameterValue' "$CONFIG_FILE")-FoxyServiceAccount
 echo "Fetching access keys for FoxyServiceAccount: $COGNITO_USER"

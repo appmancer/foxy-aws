@@ -63,12 +63,18 @@ Resources:
                   - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/foxy_${EnvironmentName}_MaterializedView"
                   - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/foxy_${EnvironmentName}_TransactionEventLog"
                   - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/foxy_${EnvironmentName}_TransactionStatusView"
+                  - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/foxy_${EnvironmentName}_TransactionStatusView/index/SenderIndex"
+                  - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/foxy_${EnvironmentName}_TransactionStatusView/index/RecipientIndex"
                   - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/foxy_${EnvironmentName}_Fees"
               - Effect: Allow
                 Action:
                   - "sqs:SendMessage"
                 Resource:
                   - !Sub "arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:Foxy-${EnvironmentName}-TransactionBroadcastQueue"
+              - Effect: Allow
+                Action:
+                  - secretsmanager:GetSecretValue
+                Resource: !Sub arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:foxy/${Environment}/keys/*
 
   FoxyLambdaSQSRole:
     Type: AWS::IAM::Role
