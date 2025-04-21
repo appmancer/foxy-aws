@@ -74,7 +74,7 @@ Resources:
               - Effect: Allow
                 Action:
                   - secretsmanager:GetSecretValue
-                Resource: !Sub arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:foxy/${Environment}/keys/*
+                Resource: !Sub arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:foxy/${EnvironmentName}/keys/*
 
   FoxyLambdaSQSRole:
     Type: AWS::IAM::Role
