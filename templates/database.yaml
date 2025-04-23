@@ -137,6 +137,63 @@ Resources:
         AttributeName: ttl
         Enabled: true
 
+  TransactionHistoryView:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "foxy_${EnvironmentName}_TransactionHistoryView"
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: PK
+          AttributeType: S
+        - AttributeName: SK
+          AttributeType: S
+        - AttributeName: Status
+          AttributeType: S
+        - AttributeName: Direction
+          AttributeType: S
+        - AttributeName: Token
+          AttributeType: S
+        - AttributeName: CreatedAt
+          AttributeType: S
+      KeySchema:
+        - AttributeName: PK
+          KeyType: HASH
+        - AttributeName: SK
+          KeyType: RANGE
+      GlobalSecondaryIndexes:
+        - IndexName: StatusIndex
+          KeySchema:
+            - AttributeName: Status
+              KeyType: HASH
+            - AttributeName: CreatedAt
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        - IndexName: DirectionIndex
+          KeySchema:
+            - AttributeName: Direction
+              KeyType: HASH
+            - AttributeName: CreatedAt
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        - IndexName: TokenIndex
+          KeySchema:
+            - AttributeName: Token
+              KeyType: HASH
+            - AttributeName: CreatedAt
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+      SSESpecification:
+        SSEEnabled: true
+      Tags:
+        - Key: App
+          Value: Foxy
+        - Key: Environment
+          Value: !Ref EnvironmentName
+
+
   # IAM Role for Application
   AppRole:
     Type: AWS::IAM::Role
