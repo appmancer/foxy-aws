@@ -68,6 +68,7 @@ Resources:
                   - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/foxy_${EnvironmentName}_MaterializedView"
                   - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/foxy_${EnvironmentName}_TransactionEventLog"
                   - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/foxy_${EnvironmentName}_TransactionStatusView"
+                  - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/foxy_${EnvironmentName}_TransactionStatusView/index/StatusIndex"
                   - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/foxy_${EnvironmentName}_TransactionStatusView/index/SenderIndex"
                   - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/foxy_${EnvironmentName}_TransactionStatusView/index/RecipientIndex"
                   - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/foxy_${EnvironmentName}_TransactionHistoryView"
@@ -127,9 +128,9 @@ Resources:
                 Resource:
                   - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/foxy_${EnvironmentName}_UserLookup"
                   - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/foxy_${EnvironmentName}_EventStore"
-                  - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/foxy_${EnvironmentName}_MaterializedView"
                   - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/foxy_${EnvironmentName}_TransactionEventLog"
                   - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/foxy_${EnvironmentName}_TransactionStatusView"
+                  - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/foxy_${EnvironmentName}_TransactionHistoryView"
                   - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/foxy_${EnvironmentName}_Fees"
 
 Outputs:
