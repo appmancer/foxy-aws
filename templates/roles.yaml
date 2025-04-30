@@ -72,6 +72,7 @@ Resources:
                   - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/foxy_${EnvironmentName}_TransactionHistoryView/index/DirectionIndex"
                   - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/foxy_${EnvironmentName}_TransactionHistoryView/index/TokenIndex"
                   - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/foxy_${EnvironmentName}_Fees"
+                  - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/foxy_${EnvironmentName}_UserDevices"
               - Effect: Allow
                 Action:
                   - "sqs:SendMessage"
